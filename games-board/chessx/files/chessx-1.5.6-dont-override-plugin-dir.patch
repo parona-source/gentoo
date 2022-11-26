@@ -1,0 +1,21 @@
+diff --git a/src/gui/main.cpp b/src/gui/main.cpp
+index cfbad9a5..bf841045 100644
+--- a/src/gui/main.cpp
++++ b/src/gui/main.cpp
+@@ -102,14 +102,10 @@ prevHook = _CrtSetReportHook(customReportHook);
+ 
+     QApplication::setFont(QMessageBox().font()); // Workaround for severe bug in Qt5
+ 
++#ifdef Q_OS_WIN || QT_OS_MAC
+     QDir dir(QApplication::applicationDirPath());
+ 
+-#ifdef QT_DEBUG
+     QApplication::addLibraryPath(dir.absolutePath());
+-#else
+-    QStringList l;
+-    l<<dir.absolutePath();
+-    QApplication::setLibraryPaths(l);
+ #endif
+ 
+ #ifdef Q_OS_WIN
+

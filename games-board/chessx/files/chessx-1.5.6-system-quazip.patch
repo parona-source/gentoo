@@ -1,0 +1,194 @@
+From 1e932bb02277955f4398d1b6945781941b9bb743 Mon Sep 17 00:00:00 2001
+From: Ondrej Mosnacek <omosnace@redhat.com>
+Date: Mon, 26 Jul 2021 11:24:22 +0200
+Subject: [PATCH] Allow linking against system libraries via pkg-config
+
+When 'link_pkgconfig' is added to CONFIG, chessx will now use pkg-config
+to dynamically link against the quazip and zlib libraries installed on
+the system, rather than bundling quazip or guessing the header file
+location. Default behavior remains unchanged.
+
+Signed-off-by: Ondrej Mosnacek <omosnace@redhat.com>
+---
+ chessx.pro             | 102 +++++++++++++++++++++--------------------
+ src/gui/mainwindow.cpp |  10 +++-
+ 2 files changed, 61 insertions(+), 51 deletions(-)
+
+diff --git a/chessx.pro b/chessx.pro
+index deff2fec..fba373f1 100644
+--- a/chessx.pro
++++ b/chessx.pro
+@@ -36,7 +36,6 @@ sound {
+   QT += multimedia
+ }
+ 
+-DEFINES += QUAZIP_STATIC
+ DEFINES += QT_NO_CAST_TO_ASCII
+ DEFINES *= QT_USE_QSTRINGBUILDER
+ 
+@@ -79,6 +78,57 @@ unix|!macx {
+     binfiles.path = $$BINDIR
+ }
+ 
++link_pkgconfig {
++  PKGCONFIG += quazip1-qt5 zlib
++}
++else {
++  HEADERS += \
++      src/quazip/JlCompress.h \
++      src/quazip/crypt.h \
++      src/quazip/ioapi.h \
++      src/quazip/quaadler32.h \
++      src/quazip/quachecksum32.h \
++      src/quazip/quacrc32.h \
++      src/quazip/quagzipfile.h \
++      src/quazip/quaziodevice.h \
++      src/quazip/quazip.h \
++      src/quazip/quazip_global.h \
++      src/quazip/quazipdir.h \
++      src/quazip/quazipfile.h \
++      src/quazip/quazipfileinfo.h \
++      src/quazip/quazipnewinfo.h \
++      src/quazip/unzip.h \
++      src/quazip/zip.h
++
++  SOURCES += \
++      src/quazip/JlCompress.cpp \
++      src/quazip/qioapi.cpp \
++      src/quazip/quaadler32.cpp \
++      src/quazip/quacrc32.cpp \
++      src/quazip/quagzipfile.cpp \
++      src/quazip/quaziodevice.cpp \
++      src/quazip/quazip.cpp \
++      src/quazip/quazipdir.cpp \
++      src/quazip/quazipfile.cpp \
++      src/quazip/quazipnewinfo.cpp \
++      src/quazip/unzip.cpp \
++      src/quazip/zip.cpp
++
++  INCLUDEPATH += src/quazip
++  DEFINES += QUAZIP_STATIC
++
++  INCLUDEPATH += $$[QT_INSTALL_PREFIX]/src/3rdparty/zlib
++  win32 {
++    # DEFINES += ZLIB_WINAPI
++    # LIBS += -lz
++    INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtZlib
++    win32-g++:LIBS += -lz
++  }
++  else {
++    LIBS += -lz
++  }
++}
++
+ scid {
+   # Scid sources
+   HEADERS += \
+@@ -319,23 +369,7 @@ HEADERS += src/database/board.h \
+   src/gui/textbrowserex.h \
+   src/gui/textedit.h \
+   src/gui/toolmainwindow.h \
+-  src/gui/translatingslider.h \
+-  src/quazip/JlCompress.h \
+-  src/quazip/crypt.h \
+-  src/quazip/ioapi.h \
+-  src/quazip/quaadler32.h \
+-  src/quazip/quachecksum32.h \
+-  src/quazip/quacrc32.h \
+-  src/quazip/quagzipfile.h \
+-  src/quazip/quaziodevice.h \
+-  src/quazip/quazip.h \
+-  src/quazip/quazip_global.h \
+-  src/quazip/quazipdir.h \
+-  src/quazip/quazipfile.h \
+-  src/quazip/quazipfileinfo.h \
+-  src/quazip/quazipnewinfo.h \
+-  src/quazip/unzip.h \
+-  src/quazip/zip.h
++  src/gui/translatingslider.h
+ 
+ SOURCES += \
+   src/database/analysis.cpp \
+@@ -478,34 +512,13 @@ SOURCES += \
+   src/gui/tableview.cpp \
+   src/gui/textedit.cpp \
+   src/gui/toolmainwindow.cpp \
+-  src/gui/translatingslider.cpp \
+-  src/quazip/JlCompress.cpp \
+-  src/quazip/qioapi.cpp \
+-  src/quazip/quaadler32.cpp \
+-  src/quazip/quacrc32.cpp \
+-  src/quazip/quagzipfile.cpp \
+-  src/quazip/quaziodevice.cpp \
+-  src/quazip/quazip.cpp \
+-  src/quazip/quazipdir.cpp \
+-  src/quazip/quazipfile.cpp \
+-  src/quazip/quazipnewinfo.cpp \
+-  src/quazip/unzip.cpp \
+-  src/quazip/zip.cpp
++  src/gui/translatingslider.cpp
+ 
+ TEMPLATE = app
+ INCLUDEPATH += src/database
+ INCLUDEPATH += src/guess
+ INCLUDEPATH += src/gui
+ INCLUDEPATH += src/dialogs
+-INCLUDEPATH += src/quazip
+-INCLUDEPATH += $$[QT_INSTALL_PREFIX]/src/3rdparty/zlib
+-
+-win32 {
+-  # DEFINES += ZLIB_WINAPI
+-  # LIBS += -lz
+-  INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtZlib
+-  win32-g++:LIBS += -lz
+-}
+ 
+ UI_DIR = src/generated
+ MOC_DIR = src/generated
+@@ -523,15 +536,6 @@ CONFIG(release, debug|release) {
+   DEFINES += QT_NO_DEBUG_OUTPUT NDEBUG
+ }
+ 
+-!win32 {
+-  CONFIG(debug, debug|release) {
+-    LIBS += -lz
+-  }
+-  CONFIG(release, debug|release) {
+-    LIBS += -lz
+-  }
+-}
+-
+ TARGET = chessx
+ 
+ ICON = data/images/chessx.icns
+diff --git a/src/gui/mainwindow.cpp b/src/gui/mainwindow.cpp
+index c6592a8c..652283b2 100644
+--- a/src/gui/mainwindow.cpp
++++ b/src/gui/mainwindow.cpp
+@@ -46,8 +46,6 @@
+ #include "output.h"
+ #include "pgndatabase.h"
+ #include "playerlistwidget.h"
+-#include "quazip.h"
+-#include "quazipfile.h"
+ #include "savedialog.h"
+ #include "settings.h"
+ #include "style.h"
+@@ -59,6 +57,14 @@
+ #include "translatingslider.h"
+ #include "version.h"
+ 
++#ifdef QUAZIP_STATIC
++#include "quazip.h"
++#include "quazipfile.h"
++#else
++#include <quazip/quazip.h>
++#include <quazip/quazipfile.h>
++#endif
++
+ #include <time.h>
+ 
+ #include <QApplication>
+-- 
+2.31.1
+

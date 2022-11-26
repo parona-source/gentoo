@@ -1,0 +1,51 @@
+From bcc6ad1127bed2fdd5809aa75576ea06374f0340 Mon Sep 17 00:00:00 2001
+From: dgcampea <59268455+dgcampea@users.noreply.github.com>
+Date: Tue, 6 Apr 2021 19:02:11 +0100
+Subject: [PATCH 1/2] "qmake install" support for linux/bsd
+
+(cherry picked from commit 975db069e4e6834a52cc75fbb402ca3c2c87f200)
+---
+ chessx.pro | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/chessx.pro b/chessx.pro
+index 006c17e4..deff2fec 100644
+--- a/chessx.pro
++++ b/chessx.pro
+@@ -52,6 +52,33 @@ macx {
+   QMAKE_CXXFLAGS_DEBUG *= -m64 -O0
+ }
+ 
++
++unix|!macx {
++    isEmpty(PREFIX) {
++        bsd {
++            PREFIX = /usr/local
++        }
++        PREFIX = /usr
++    }
++    BINDIR = $$PREFIX/bin
++    DATADIR = $$PREFIX/share
++
++    INSTALLS += appdata desktop icons binfiles
++
++    appdata.files = unix/io.sourceforge.ChessX.metainfo.xml
++    appdata.path = $$DATADIR/metainfo
++    desktop.files = unix/chessx.desktop
++    desktop.path = $$DATADIR/applications
++
++    icons.path = $$DATADIR/icons/hicolor
++    icons.commands = install -Dm644 data/images/chessx.png    $${icons.path}/128x128/apps/chessx.png; \
++                     install -Dm644 data/images/chessx-32.png $${icons.path}/32x32/apps/chessx.png; \
++                     install -Dm644 data/images/chessx-64.png $${icons.path}/64x64/apps/chessx.png;
++
++    binfiles.files = release/chessx
++    binfiles.path = $$BINDIR
++}
++
+ scid {
+   # Scid sources
+   HEADERS += \
+-- 
+2.31.1
+

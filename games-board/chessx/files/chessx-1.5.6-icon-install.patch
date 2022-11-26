@@ -1,0 +1,79 @@
+From 0614373214e6eb7e315aaf9ff55064d212e0564e Mon Sep 17 00:00:00 2001
+From: Ondrej Mosnacek <omosnace@redhat.com>
+Date: Sat, 26 Jun 2021 12:10:24 +0200
+Subject: [PATCH] Fix install path of icons on Linux
+
+The current hack with explicit 'install' invocation is broken because it
+doesn't respect the $(INSTALL_ROOT) variable. Avoid manual renaming of
+the icons by naming all of them chessx.png and placing them into
+individual subdirectories.
+
+Signed-off-by: Ondrej Mosnacek <omosnace@redhat.com>
+---
+ chessx.pro                                         |  12 +++++++-----
+ data/images/{ => icons-128}/chessx.png             | Bin
+ data/images/{chessx-32.png => icons-32/chessx.png} | Bin
+ data/images/{chessx-64.png => icons-64/chessx.png} | Bin
+ resources.qrc                                      |   2 +-
+ 6 files changed, 11 insertions(+), 9 deletions(-)
+ rename data/images/{ => icons-128}/chessx.png (100%)
+ rename data/images/{chessx-32.png => icons-32/chessx.png} (100%)
+ rename data/images/{chessx-64.png => icons-64/chessx.png} (100%)
+
+diff --git a/chessx.pro b/chessx.pro
+index e123fde7..ec93802b 100644
+--- a/chessx.pro
++++ b/chessx.pro
+@@ -63,17 +63,19 @@ unix|!macx {
+     BINDIR = $$PREFIX/bin
+     DATADIR = $$PREFIX/share
+ 
+-    INSTALLS += appdata desktop icons binfiles
++    INSTALLS += appdata desktop icons128 icons64 icons32 binfiles
+ 
+     appdata.files = unix/io.sourceforge.ChessX.metainfo.xml
+     appdata.path = $$DATADIR/metainfo
+     desktop.files = unix/chessx.desktop
+     desktop.path = $$DATADIR/applications
+ 
+-    icons.path = $$DATADIR/icons/hicolor
+-    icons.commands = install -Dm644 data/images/chessx.png    $${icons.path}/128x128/apps/chessx.png; \
+-                     install -Dm644 data/images/chessx-32.png $${icons.path}/32x32/apps/chessx.png; \
+-                     install -Dm644 data/images/chessx-64.png $${icons.path}/64x64/apps/chessx.png;
++    icons128.path = $$DATADIR/icons/hicolor/128x128/apps
++    icons128.files = data/images/icons-128/chessx.png
++    icons64.path = $$DATADIR/icons/hicolor/64x64/apps
++    icons64.files = data/images/icons-64/chessx.png
++    icons32.path = $$DATADIR/icons/hicolor/32x32/apps
++    icons32.files = data/images/icons-32/chessx.png
+ 
+     binfiles.files = release/chessx
+     binfiles.path = $$BINDIR
+diff --git a/data/images/chessx.png b/data/images/icons-128/chessx.png
+similarity index 100%
+rename from data/images/chessx.png
+rename to data/images/icons-128/chessx.png
+diff --git a/data/images/chessx-32.png b/data/images/icons-32/chessx.png
+similarity index 100%
+rename from data/images/chessx-32.png
+rename to data/images/icons-32/chessx.png
+diff --git a/data/images/chessx-64.png b/data/images/icons-64/chessx.png
+similarity index 100%
+rename from data/images/chessx-64.png
+rename to data/images/icons-64/chessx.png
+diff --git a/resources.qrc b/resources.qrc
+index 9f9d550b..742ab783 100644
+--- a/resources.qrc
++++ b/resources.qrc
+@@ -22,7 +22,7 @@
+         <file alias="images/black_chess.png">data/images/black_chess.png</file>
+         <file alias="images/bug.png">data/images/bug_add.png</file>
+         <file alias="images/camera.png">data/images/camera.png</file>
+-        <file alias="images/chessx.png">data/images/chessx.png</file>
++        <file alias="images/chessx.png">data/images/icons-128/chessx.png</file>
+         <file alias="images/chip.png">data/images/chip.png</file>
+         <file alias="images/circle_black.svg">data/images/circle_black.svg</file>
+         <file alias="images/circle_blue.svg">data/images/circle_blue.svg</file>
+-- 
+2.31.1
+
