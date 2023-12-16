@@ -38,14 +38,12 @@ SLOT="0/23.3.0"
 
 S="${WORKDIR}/${PARENT_P}/python"
 
-BDEPEND="
-"
 DEPEND="
 	${PYTHON_DEPS}
 "
 RDEPEND="
 	${BDEPEND}
-	dev-libs/protobuf:${SLOT}
+	~virtual/protobuf-${PARENT_PV}
 "
 
 distutils_enable_tests setup.py
