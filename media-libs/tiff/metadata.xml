@@ -14,4 +14,7 @@
 		<remote-id type="cpe">cpe:/a:libtiff:libtiff</remote-id>
 		<remote-id type="cpe">cpe:/a:libtiff_project:libtiff</remote-id>
 	</upstream>
+	<use>
+		<flag name="libdeflate">Use <pkg>app-arch/libdeflate</pkg> for faster Deflate support.</flag>
+	</use>
 </pkgmetadata>
