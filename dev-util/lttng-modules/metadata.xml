@@ -6,6 +6,8 @@
 		Use the kernel tracer if you are debugging a system-wide performance problem or a kernel problem. This tracer comes with an instrumentation patch for most kernel subsystems, which is enough to debug many problems. This includes system calls, IRQs, traps, memory management, softIRQs, scheduling and many others. Of course, the kernel tracer allows you to add your own instrumentation anywhere in the kernel code.
 	</longdescription>
 	<upstream>
+		<bugs-to>https://bugs.lttng.org</bugs-to>
+		<doc>https://lttng.org/docs</doc>
 		<remote-id type="github">lttng/lttng-modules</remote-id>
 	</upstream>
 </pkgmetadata>
