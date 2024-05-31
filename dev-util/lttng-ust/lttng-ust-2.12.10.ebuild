@@ -3,7 +3,7 @@
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{11..12} )
+PYTHON_COMPAT=( python3_{11..13} )
 
 inherit autotools python-single-r1
 
@@ -21,7 +21,6 @@ SLOT="0/${MY_SLOT}"
 KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~ppc ~ppc64 ~riscv ~sparc ~x86"
 IUSE="examples numa"
 REQUIRED_USE="${PYTHON_REQUIRED_USE}"
-
 
 DEPEND="
 	dev-libs/userspace-rcu:=
