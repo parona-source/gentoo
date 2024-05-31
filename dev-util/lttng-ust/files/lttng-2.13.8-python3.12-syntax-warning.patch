@@ -1,0 +1,67 @@
+--- a/tools/lttng-gen-tp
++++ b/tools/lttng-gen-tp
+@@ -45,7 +45,7 @@ class HeaderFile:
+         outputFile = open(self.outputFilename, "w")
+         # Include guard macro will be created by uppercasing the filename and
+         # replacing all non alphanumeric characters with '_'
+-        includeGuard = re.sub('[^0-9a-zA-Z]', '_', self.outputFilename.upper())
++        includeGuard = re.sub(r'[^0-9a-zA-Z]', '_', self.outputFilename.upper())
+ 
+         outputFile.write(HeaderFile.HEADER_TPL.format(providerName=self.template.domain,
+                                            includeGuard=includeGuard,
+@@ -158,23 +158,23 @@ class TemplateFile:
+ 
+         # Remove # comments (from input and output file) but keep
+         # #include in the output file
+-        removeComments = re.compile("#[^include].*$", flags=re.MULTILINE)
++        removeComments = re.compile(r"#[^include].*$", flags=re.MULTILINE)
+         self.text = removeComments.sub("", self.text)
+         # Remove #include directive from the parsed text
+-        removePreprocess = re.compile("#.*$", flags=re.MULTILINE)
++        removePreprocess = re.compile(r"#.*$", flags=re.MULTILINE)
+         noPreprocess = removePreprocess.sub("", self.text)
+         # Remove // comments
+-        removeLineComment = re.compile("\/\/.*$", flags=re.MULTILINE)
++        removeLineComment = re.compile(r"\/\/.*$", flags=re.MULTILINE)
+         nolinecomment = removeLineComment.sub("", noPreprocess)
+         # Remove all spaces and lines
+-        cleantext = re.sub("\s*", "", nolinecomment)
++        cleantext = re.sub(r"\s*", "", nolinecomment)
+         # Remove multine C style comments
+-        nocomment = re.sub("/\*.*?\*/", "", cleantext)
+-        entries = re.split("^LTTNG_UST_TRACEPOINT_.*?", nocomment)
++        nocomment = re.sub(r"/\*.*?\*/", "", cleantext)
++        entries = re.split(r"^LTTNG_UST_TRACEPOINT_.*?", nocomment)
+ 
+         for entry in entries:
+             if entry != '':
+-                decomp = re.findall("(\w*?)\((\w*?),(\w*?),", entry)
++                decomp = re.findall(r"(\w*?)\((\w*?),(\w*?),", entry)
+                 typea = decomp[0][0]
+                 domain = decomp[0][1]
+                 name = decomp[0][2]
+@@ -289,21 +289,21 @@ def main(argv=None):
+                 if headerFilename:
+                     curFilename = headerFilename
+                 else:
+-                    curFilename = re.sub("\.tp$", ".h", arg)
++                    curFilename = re.sub(r"\.tp$", ".h", arg)
+                 doth = HeaderFile(curFilename, tpl)
+                 doth.write()
+             if doCFile:
+                 if cFilename:
+                     curFilename = cFilename
+                 else:
+-                    curFilename = re.sub("\.tp$", ".c", arg)
++                    curFilename = re.sub(r"\.tp$", ".c", arg)
+                 dotc = CFile(curFilename, tpl)
+                 dotc.write()
+             if doObj:
+                 if objFilename:
+                     curFilename = objFilename
+                 else:
+-                    curFilename = re.sub("\.tp$", ".o", arg)
++                    curFilename = re.sub(r"\.tp$", ".o", arg)
+                 dotobj = ObjFile(curFilename, tpl)
+                 dotobj.write()
+         except IOError as args:

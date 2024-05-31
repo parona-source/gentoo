@@ -30,6 +30,10 @@ RDEPEND="
 	${DEPEND}
 "
 
+PATCHES=(
+	"${FILESDIR}"/lttng-2.12.10-python3.12-syntax-warning.patch
+)
+
 src_prepare() {
 	default
 

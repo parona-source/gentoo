@@ -5,7 +5,7 @@ EAPI=8
 
 PYTHON_COMPAT=( python3_{11..13} )
 
-inherit python-single-r1
+inherit libtool python-single-r1
 
 # Please bump the following packages together:
 # dev-util/lttng-modules
@@ -38,6 +38,7 @@ RDEPEND="
 "
 BDEPEND="
 	virtual/pkgconfig
+	examples? ( dev-build/cmake )
 	test? ( dev-lang/perl )
 "
 
@@ -45,6 +46,19 @@ QA_CONFIG_IMPL_DECL_SKIP=(
 	pthread_get_name_np # different from pthread_getname_*, not on linux
 	pthread_set_name_np # different from pthread_setname_*, not on linux
 )
+
+PATCHES=(
+	"${FILESDIR}"/lttng-2.13.8-python3.12-syntax-warning.patch
+)
+
+src_prepare() {
+	default
+
+	elibtoolize
+
+	# shm tests fail in sanbox
+	sed -i -e '/libringbuffer/d' tests/unit/Makefile.am || die
+}
 
 src_configure() {
 	local myeconfargs=(
