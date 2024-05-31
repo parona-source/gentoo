@@ -11,8 +11,7 @@ MY_P="${P/_rc/-rc}"
 MY_SLOT="$(ver_cut 1-2)"
 
 DESCRIPTION="Linux Trace Toolkit - UST library"
-HOMEPAGE="https://lttng.org
-	https://github.com/lttng/lttng-ust/"
+HOMEPAGE="https://lttng.org"
 SRC_URI="https://lttng.org/files/${PN}/${MY_P}.tar.bz2"
 S="${WORKDIR}/${MY_P}"
 
