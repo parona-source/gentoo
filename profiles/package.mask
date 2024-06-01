@@ -899,13 +899,6 @@ dev-build/automake:1.11
 # bug #772998
 ~net-misc/openntpd-6.8_p1
 
-# Michał Górny <mgorny@gentoo.org> (2020-11-10)
-# This old Kodi version requires vulnerable dev-python/pillow
-# and prevents users from upgrading.  Masked for the time being.
-# Bug #729672.
-media-plugins/kodi-game-libretro-nestopia
-media-plugins/kodi-game-libretro-dosbox
-
 # Sam James <sam@gentoo.org> (2020-10-05)
 # Masked for testing. New major versions of Guile
 # often break reverse dependencies.
