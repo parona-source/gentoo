@@ -1,4 +1,4 @@
-# Copyright 2018-2023 Gentoo Authors
+# Copyright 2018-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 # @ECLASS: libretro-core.eclass
@@ -7,7 +7,8 @@
 # @AUTHOR:
 # Cecil Curry <leycec@gmail.com>
 # Craig Andrews <candrews@gentoo.org>
-# @SUPPORTED_EAPIS: 7
+# David GUGLIELMI <david.guglielmi@gmail.com>
+# @SUPPORTED_EAPIS: 7 8
 # @BLURB: Simplify libretro core ebuilds
 # @DESCRIPTION:
 # The libretro eclass is designed to streamline the construction of
@@ -22,7 +23,7 @@
 # between the ebuilds.
 # @EXAMPLE:
 # @CODE
-# EAPI=7
+# EAPI=8
 #
 # LIBRETRO_CORE_NAME="2048"
 # LIBRETRO_COMMIT_SHA="45655d3662e4cbcd8afb28e2ee3f5494a75888de"
@@ -35,7 +36,7 @@
 # @CODE
 
 case ${EAPI} in
-	7) ;;
+	7|8) ;;
 	*) die "${ECLASS}: EAPI ${EAPI:-0} not supported" ;;
 esac
 
