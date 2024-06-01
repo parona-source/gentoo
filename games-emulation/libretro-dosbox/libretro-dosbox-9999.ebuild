@@ -1,10 +1,10 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=7
+EAPI=8
 
 LIBRETRO_REPO_NAME="libretro/dosbox-libretro"
-inherit libretro-core flag-o-matic
+inherit flag-o-matic libretro-core
 
 DESCRIPTION="DOSBox libretro port"
 LICENSE="GPL-2+"
