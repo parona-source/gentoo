@@ -122,7 +122,6 @@ COMMON_TARGET_DEPEND="${PYTHON_DEPS}
 	>=media-libs/libass-0.15.0:=
 	media-libs/mesa[egl(+),gbm(+)?,wayland?,X?]
 	>=media-libs/taglib-1.9.0
-	=media-video/ffmpeg-6*:=[encode,soc(-)?,postproc,vaapi?,vdpau?,X?]
 	sci-libs/kissfft
 	virtual/libiconv
 	virtual/ttf-fonts
@@ -193,6 +192,9 @@ COMMON_TARGET_DEPEND="${PYTHON_DEPS}
 	)
 	samba? (
 		>=net-fs/samba-3.4.6[smbclient(+)]
+	)
+	system-ffmpeg? (
+		=media-video/ffmpeg-6*:=[encode,soc(-)?,postproc,vaapi?,vdpau?,X?]
 	)
 	udf? (
 		>=dev-libs/libudfread-1.0.0
