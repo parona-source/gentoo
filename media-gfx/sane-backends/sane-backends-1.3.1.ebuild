@@ -6,7 +6,7 @@ EAPI=8
 PYTHON_COMPAT=( python3_{10..13} )
 
 # python-any-r1 required for a script in backends/pixma/scripts/
-inherit autotools flag-o-matic multilib-minimal optfeature python-any-r1 systemd toolchain-funcs udev
+inherit autotools flag-o-matic libtool multilib-minimal optfeature python-any-r1 systemd toolchain-funcs udev
 
 DESCRIPTION="Scanner Access Now Easy - Backends"
 HOMEPAGE="http://www.sane-project.org/"
@@ -132,7 +132,10 @@ REQUIRED_USE="
 	sane_backends_mustek_usb2? ( threads )
 "
 
-# For pixma: see https://gitlab.com/sane-project/backends/-/releases/1.0.28#build
+# Automagic libjpeg, libtiff, libpng
+# libjpeg: gphoto2 and dell1600n_net
+# libtiff: dell1600n_net
+# libpng: escl and /usr/bin/scanimage
 RDEPEND="
 	acct-user/saned
 	acct-group/scanner
@@ -173,7 +176,9 @@ RDEPEND="
 DEPEND="${RDEPEND}
 	v4l? ( sys-kernel/linux-headers )
 "
+# elt-patches: https://bugs.gentoo.org/932438
 BDEPEND="${PYTHON_DEPS}
+	>=app-portage/elt-patches-20240729
 	dev-build/autoconf-archive
 	sys-devel/gettext
 	virtual/pkgconfig
@@ -193,6 +198,7 @@ src_prepare() {
 	default
 
 	eautoreconf
+	elibtoolize
 
 	# Needed for udev rules generation/installation
 	multilib_copy_sources
