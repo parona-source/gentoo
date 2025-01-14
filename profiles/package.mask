@@ -36,6 +36,11 @@
 
 #--- END OF EXAMPLES ---
 
+# Alfred Wingate <parona@protonmail.com> (2025-11-15)
+# Masked co-installable slots for testing
+>=dev-db/mysql-8.0.42-r100:8.0
+>=dev-db/mysql-8.4.5-r100:8.4
+
 # Ionen Wolkens <ionen@gentoo.org> (2025-11-14)
 # A regression[1][2] is causing many users to be stuck at 1920x1080@60
 # due the drivers seemingly misdetecting capacity of the connection to
