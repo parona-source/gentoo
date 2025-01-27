@@ -253,6 +253,10 @@ do_set() {
     linker "${USR_PATH}/$(lib_dir)/mysql-${slot}/bin/" \
         "" "${USR_PATH}/bin"
 
+    # Link binaries to /usr/sbin/
+    linker "${USR_PATH}/$(lib_dir)/mysql-${slot}/sbin/" \
+        "" "${USR_PATH}/sbin"
+
     # Link pkg-config metadata files
     linker "${USR_PATH}/$(lib_dir)/mysql-${slot}/pkgconfig/" \
         "" "${USR_PATH}/share/pkgconfig/"
