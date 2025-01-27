@@ -1,0 +1,313 @@
+# -*-eselect-*-  vim: ft=eselect
+# Copyright 2025 Gentoo Authors
+# Distributed under the terms of the GNU GPL version 2 or later
+
+inherit config multilib
+
+DESCRIPTION="Manage active MySQL slots"
+MAINTAINER=""
+VERSION="0"
+
+# We do a lot of things in /usr and it's a bit of a pain to write this
+# constantly.
+USR_PATH="${EROOT%/}/usr"
+
+active_slot() {
+    # ${USR_PATH}/share/mysql is a symlink to the active
+    # slot. See if it's there, then find out where it links to.
+    if [[ -h "${USR_PATH}/share/mysql" ]] ; then
+        canonicalise -m "${USR_PATH}/share/mysql" | \
+        sed -re 's#.*([1-9][0-9.]+)$#\1#'
+    else
+        echo "(none)"
+    fi
+}
+
+lib_dir() {
+    local lib_list=$(list_libdirs)
+    if [[ ${lib_list} =~ .*lib64.* && \
+        -n $(ls -d ${USR_PATH}/lib64/mysql-*/ 2> /dev/null) ]] ; then
+        echo "lib64"
+    elif [[ ${lib_list} =~ .*lib32.* && \
+        -n $(ls -d ${USR_PATH}/lib32/mysql-*/ 2> /dev/null) ]] ; then
+        echo "lib32"
+    elif [[ ${lib_list} =~ .*libx32.* && \
+        -n $(ls -d ${USR_PATH}/libx32/mysql-*/ 2> /dev/null) ]] ; then
+        echo "libx32"
+    else
+        echo "lib"
+    fi
+}
+
+### Finder Function ###
+# Takes two arguments:
+#   - Absolute path to directory to search
+#   - Pattern to search for
+finder() {
+    local source_dir=$1
+    local pattern=$2
+
+    # Prevent passed patterns from being globbed
+    # If this module is run in /usr, '-name lib*' ends up globbing 'lib*',
+    # passing to 'find' the pattern '-name lib lib32 lib64' and find interprets
+    # those as path arguments causing failure.
+    set -f
+    find -L "${source_dir}" -maxdepth 1 -mindepth 1 ${pattern}
+    set +f
+}
+
+
+### Linker Function ###
+# Takes four arguments:
+#   - Full source path (e.g. /usr/lib/mysql-8.4/lib)
+#   - Pattern to search for
+#   - Full target directory path (e.g. /usr/bin)
+#   - Suffix (Optional) (e.g 8.4 to make /usr/bin/mysql-8.4)
+linker() {
+    local source_dir=$1
+    local pattern=$2
+    local target_dir=$3
+    local suffix=$4
+
+    local findings
+    local link_source
+    local link_target
+    local rel_source
+
+    findings=$(finder "${source_dir}" "${pattern}")
+
+    for link_source in ${findings} ; do
+        link_target="${target_dir%/}/$(basename ${link_source})${suffix:+-}${suffix}"
+
+        # Create relative links so that they work both here and inside the new
+        # root if $ROOT is not "/".
+        rel_source=$(relative_name "${link_source}" "${target_dir}")
+        ln -sfn "${rel_source}" "${link_target}" || \
+            die -q "SYMLINK FAILED: ${rel_source} -> ${link_target}"
+    done
+}
+
+
+get_slots() {
+    local slot
+    local found_slots
+
+    for slot in $(find "${USR_PATH}/$(lib_dir)/" \
+        -mindepth 1 -maxdepth 1 -type d -name 'mysql-*' | \
+        sed -re 's#.*([1-9][0-9.]+)$#\1#' | sort -n)
+    do
+        # Check that mysqlcheck exists for this slot, otherwise we have
+        # a false positive.
+        [[ -x "${USR_PATH}/$(lib_dir)/mysql-${slot}/bin/mysqlcheck" ]] && \
+            found_slots+=( ${slot} )
+    done
+
+    echo ${found_slots[@]}
+}
+
+### List Action ###
+describe_list() {
+    echo "List available MySQL slots."
+}
+
+do_list() {
+    if $(is_output_mode brief) ; then
+        echo $(get_slots)
+    else
+        write_list_start "Available MySQL Slots"
+
+        local provider
+        local slot
+        local installdir
+        for slot in $(get_slots) ; do
+            installdir="${USR_PATH}/$(lib_dir)/mysql-${slot}/"
+
+            # The output of `mysqlcheck --version` also includes "MySQL" in
+            # the string, which is a bit redundant.
+            provider=$("${installdir}"/bin/mysqlcheck --version | \
+                sed 's/.* Ver \([0-9]*.*\) for .*/\1/')
+
+            # Unless a file exists that's controlled by the 'server' use flag,
+            # report that it's client only.
+            [[ -e "${installdir}/sbin/mysqld" ]] || provider+=' (Clients Only)'
+
+            case "${slot}" in
+                "$(active_slot)" )
+                    write_kv_list_entry \
+                    "$(highlight_marker ${slot})" "${provider}";;
+                * )
+                    write_kv_list_entry "${slot}" "${provider}";;
+            esac
+        done
+
+        [[ -z "$(get_slots)" ]] && write_warning_msg "No slots available."
+    fi
+}
+
+### Show Action ###
+describe_show() {
+    echo "Show which slot is currently active."
+}
+
+do_show() {
+    echo $(active_slot)
+}
+
+### Set Action ###
+describe_set() {
+    echo "Create symbolic links for MySQL libraries and applications."
+}
+
+do_set() {
+    local slot=$1
+
+    if [[ ! -d ${USR_PATH}/$(lib_dir)/mysql-${slot} ]] ; then
+        die -q "Not a valid slot."
+    fi
+
+    # If there's an active slot, unset that one first
+    local active_slot=$(active_slot)
+    if [[ "${active_slot}" != "(none)" ]] ; then
+        echo -ne "Unsetting ${active_slot} as default..."
+        do_unset ${active_slot}
+        echo "done."
+    fi
+
+    echo -ne "Setting ${slot} as the default..."
+
+    # Link modules to /usr/lib{,32,64}/
+    local x
+    for x in $(list_libdirs) ; do
+        if [[ -d "${USR_PATH}/${x}/mysql-${slot}/${x}" ]] ; then
+            # 'linker' function doesn't work for linking directories.
+            # Default lib path - create a relative link
+            ln -sfn "mysql-${slot}/${x}" "${USR_PATH}/${x}/mysql" || \
+                die -q "SYMLINK FAILED: mysql-${slot}/${x} -> ${USR_PATH}/${x}/mysql"
+
+            # Linker works for files
+            linker "${USR_PATH}/${x}/mysql-${slot}/${x}/" \
+                "-name lib*" "${USR_PATH}/${x}"
+        fi
+    done
+
+    # Link binaries to /usr/bin/
+    linker "${USR_PATH}/$(lib_dir)/mysql-${slot}/bin/" \
+        "" "${USR_PATH}/bin"
+
+    if [[ -d "${USR_PATH}/$(lib_dir)/mysql-${slot}/sbin" ]]; then
+        # Link binaries to /usr/sbin/
+        linker "${USR_PATH}/$(lib_dir)/mysql-${slot}/sbin/" \
+            "" "${USR_PATH}/sbin"
+    fi
+
+    # Link man pages
+    local mandir mansec
+    for mandir in "${USR_PATH}"/share/mysql-${slot}/man/man{1,8} ; do
+        mansec=$(basename "${mandir}")
+        # Because the user could have FEATURES="noman", check the directory
+        # exists before using it. (https://bugs.gentoo.org/618294)
+        if [[ -d ${USR_PATH}/share/man/${mansec} ]] ; then
+            linker "${mandir}" "" "${USR_PATH}/share/man/${mansec}"
+        fi
+    done
+
+    # Default share path - use a relative link here by just specifying the
+    # base name
+    ln -sfn "mysql-${slot}" "${USR_PATH}/share/mysql" || \
+        die -q "SYMLINK FAILED: mysql-${slot} -> ${USR_PATH}/share/mysql"
+
+    echo "success!"
+}
+
+
+### Unset Action ###
+describe_unset() {
+    echo "Remove symbolic links."
+}
+
+# Undo everything done by do_set().
+do_unset() {
+    local slot=$(active_slot)
+
+    # Get the file path that the link is pointing to. If it has the string
+    # "mysql-${slot}" somewhere in it, then it's a link that this module is
+    # handling.
+    is_active_slot_link() {
+        if [[ $(canonicalise -m "$1") == *mysql-${slot}* ]] ; then
+            return 0 # yes
+        else
+            return 1 # no
+        fi
+    }
+
+    # Start with some known locations that are, or will contain, symlinks.
+    local paths=(
+        "${USR_PATH}"/share/man/man{1,8}
+        "${USR_PATH}/share/mysql"
+        "${USR_PATH}/bin"
+        "${USR_PATH}/sbin"
+    )
+
+    local lib
+    for lib in $(list_libdirs) ; do
+        # If $libdir is a symlink, it will point to a real lib directory that
+        # will be or has been added in this loop.
+        [[ -h "${USR_PATH}/${lib}" ]] && continue
+
+        # If the $libdir/mysql symlink exists, then there are certainly
+        # others within that same directory that must be cleaned up.
+        if [[ -h "${USR_PATH}/${lib}/mysql" ]] ; then
+            paths+=( "${USR_PATH}/${lib}" )
+        fi
+    done
+
+    local l path
+    for path in "${paths[@]}" ; do
+        # If $path is a link that belongs to the active slot, it can be removed
+        # without invoking find.
+        if [[ -h "${path}" ]] && is_active_slot_link "${path}" ; then
+            rm "${path}" || write_warning_msg "Couldn't remove: ${path}"
+            continue
+        fi
+
+        # If path is a real directory, symlinks need to be found within it.
+        for l in $(find "${path}" -mindepth 1 -maxdepth 1 -type l) ; do
+            # Skip the slot specific links (e.g., psql96) in /usr/bin and
+            # /usr/share/man as they're managed by their ebuilds
+            [[ ${l} == ${USR_PATH}/bin/*${slot/.} ]] && continue
+            [[ ${l} == ${USR_PATH}/bin/*${slot/.} ]] && continue
+            [[ ${l} == ${USR_PATH}/share/man/man?/*${slot/.}* ]] && continue
+
+            if is_active_slot_link "${l}" ; then
+                rm "${l}" || write_warning_msg "Couldn't remove: ${l}"
+            fi
+        done
+    done
+}
+
+### Update Action ###
+describe_update() {
+    echo "Refreshes all symbolic links managed by this module"
+}
+
+do_update() {
+    local active_slot=$(active_slot)
+    local slots=($(get_slots))
+
+    if [[ ${slots[@]} =~ ${active_slot} ]] ; then
+        # If active_slot is in the slots list, set it again as the installation
+        # may have changed.
+        do_set ${active_slot}
+    elif [[ ${#slots[@]} -ne 0 ]] ; then
+        # If $slots is not empty and active_slot is not in the list, set the
+        # highest slot available.
+        do_set ${slots[-1]}
+    elif [[ ${active_slot} != "(none)" ]] ; then
+        # If slots is empty, but active_slot still has a value, an unset must
+        # happen as the links are now pointing to nothing.
+        do_unset ${active_slot}
+    else
+        echo "Apparently, I have nothing to do."
+    fi
+}
+
