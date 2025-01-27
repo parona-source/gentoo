@@ -6,6 +6,8 @@ EAPI=8
 DESCRIPTION="Utility to select the default MySQL slot"
 HOMEPAGE="https://wiki.gentoo.org/wiki/No_homepage"
 
+S="${WORKDIR}"
+
 LICENSE="GPL-2+"
 SLOT="0"
 KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~mips ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~x64-macos ~x64-solaris"
@@ -30,6 +32,6 @@ src_install() {
 	dosym eselect /usr/bin/mysql-config
 }
 
-pkg_postinst() {
-	mysql-config update
-}
+#pkg_postinst() {
+#	mysql-config update
+#}
