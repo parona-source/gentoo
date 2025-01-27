@@ -77,6 +77,7 @@ RDEPEND="
 	!dev-db/mysql:0
 	!dev-db/mysql:5.7
 	!dev-db/mysql-init-scripts
+	!dev-db/mysql-connector-c
 	app-eselect/eselect-mysql
 	selinux? ( sec-policy/selinux-mysql )
 	!prefix? (
@@ -220,12 +221,7 @@ src_prepare() {
 		echo > "${S}/support-files/SELinux/CMakeLists.txt" || die
 	fi
 
-	# Remove man pages for client-lib tools we don't install
-	rm \
-		man/my_print_defaults.1 \
-		man/perror.1 \
-		man/zlib_decompress.1 \
-		|| die
+	rm "${WORKDIR}"/mysql-patches/*-cmake-build-without-client-libs-and-tools.patch || die
 
 	cmake_src_prepare
 }
@@ -286,9 +282,6 @@ src_configure() {
 
 		# Causes issues on musl bug #922808
 		-DWITH_BUILD_ID=OFF
-
-		# These are installed via dev-db/mysql-connector-c
-		-DWITHOUT_CLIENTLIBS=YES
 
 		# Using bundled editline to get CTRL+C working
 		-DWITH_EDITLINE=bundled
@@ -700,9 +693,6 @@ src_install() {
 			"${ED}/usr/var" \
 			|| die
 	fi
-
-	# Kill old libmysqclient_r symlinks if they exist. Time to fix what depends on them.
-	find "${D}" -name 'libmysqlclient_r.*' -type l -delete || die
 }
 
 pkg_postinst() {
