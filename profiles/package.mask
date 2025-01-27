@@ -35,6 +35,7 @@
 
 # Alfred Wingate <parona@protonmail.com> (2025-03-10)
 # Masked for testing
+>=dev-db/mysql-8.0.41-r100:8.0
 dev-db/mysql:8.4
 
 # Sam James <sam@gentoo.org> (2025-03-09)
