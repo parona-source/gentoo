@@ -91,7 +91,6 @@ RDEPEND="
 	!prefix? (
 		acct-group/mysql
 		acct-user/mysql
-		dev-db/mysql-init-scripts
 	)
 	test-install? (
 		app-arch/zip
