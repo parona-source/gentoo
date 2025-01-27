@@ -86,15 +86,6 @@ DEPEND="
 "
 RDEPEND="
 	${COMMON_DEPEND}
-	!dev-db/mariadb
-	!dev-db/mariadb-galera
-	!dev-db/percona-server
-	!dev-db/mysql-cluster
-	!dev-db/mysql:0
-	!dev-db/mysql:5.7
-	!<dev-db/mysql-8.0.41-r100
-	!dev-db/mysql-init-scripts
-	!dev-db/mysql-connector-c
 	app-eselect/eselect-mysql
 	selinux? ( sec-policy/selinux-mysql )
 	!prefix? (
@@ -243,7 +234,6 @@ src_configure() {
 		-DINSTALL_DOCDIR="share/doc/${PF}"
 		-DINSTALL_DOCREADMEDIR="share/doc/${PF}"
 		-DINSTALL_INCLUDEDIR="include/mysql-${SLOT}"
-		-DINSTALL_INFODIR="share/info"
 		-DINSTALL_LIBDIR="$(get_libdir)/mysql-${SLOT}"
 		-DINSTALL_PRIV_LIBDIR="$(get_libdir)/mysql-${SLOT}/private"
 		-DINSTALL_MANDIR="share/mysql-${SLOT}/man"
