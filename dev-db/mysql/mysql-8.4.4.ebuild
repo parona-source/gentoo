@@ -244,7 +244,6 @@ src_configure() {
 
 		-DENABLED_PROFILING=$(usex profiling)
 		-DWITHOUT_SERVER=$(usex !server)
-		-DWITH_LIBWRAP=ON
 
 		-DWITH_ROUTER=$(usex router)
 		-DROUTER_INSTALL_PLUGINDIR="$(get_libdir)/mysql-${SLOT}/mysqlrouter"
@@ -315,6 +314,7 @@ src_configure() {
 		mycmakeargs+=(
 			-DWITH_EXTRA_CHARSETS=all
 
+			-DWITH_LIBWRAP=ON
 			-DWITH_MECAB=$(usex cjk system)
 
 			# Storage engines
