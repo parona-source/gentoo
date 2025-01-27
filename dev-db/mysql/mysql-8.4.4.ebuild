@@ -209,6 +209,7 @@ src_prepare() {
 		echo > "${S}/support-files/SELinux/CMakeLists.txt" || die
 	fi
 
+	rm "${WORKDIR}"/mysql-patches/*-cmake-Fix-minimal-build.patch || die
 	rm "${WORKDIR}"/mysql-patches/*-cmake-build-without-client-libs-and-tools.patch || die
 
 	cmake_src_prepare
