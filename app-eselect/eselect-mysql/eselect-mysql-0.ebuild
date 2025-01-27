@@ -30,8 +30,10 @@ src_install() {
 	doins "${FILESDIR}"/mysql.eselect
 
 	dosym eselect /usr/bin/mysql-config
+
+	keepdir /usr/include/mysql/mysql
 }
 
-#pkg_postinst() {
-#	mysql-config update
-#}
+pkg_postinst() {
+	mysql-config update
+}

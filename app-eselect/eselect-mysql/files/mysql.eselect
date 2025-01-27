@@ -13,9 +13,22 @@ VERSION="0"
 USR_PATH="${EROOT%/}/usr"
 
 INCLUDE_TARGETS=(
-    "${USR_PATH}"/include/mysql/mysqlx_version.h
+    "${USR_PATH}"/include/mysql/errmsg.h
+    "${USR_PATH}"/include/mysql/field_types.h
+    "${USR_PATH}"/include/mysql/my_command.h
+    "${USR_PATH}"/include/mysql/my_compress.h
+    "${USR_PATH}"/include/mysql/my_list.h
+    "${USR_PATH}"/include/mysql/mysql.h
+    "${USR_PATH}"/include/mysql/mysql/client_plugin.h
+    "${USR_PATH}"/include/mysql/mysql/plugin_auth_common.h
+    "${USR_PATH}"/include/mysql/mysql/udf_registration_types.h
+    "${USR_PATH}"/include/mysql/mysql_com.h
+    "${USR_PATH}"/include/mysql/mysql_time.h
+    "${USR_PATH}"/include/mysql/mysql_version.h
+    "${USR_PATH}"/include/mysql/mysqld_error.h
     "${USR_PATH}"/include/mysql/mysqlx_ername.h
     "${USR_PATH}"/include/mysql/mysqlx_error.h
+    "${USR_PATH}"/include/mysql/mysqlx_version.h
 )
 
 active_slot() {
@@ -28,6 +41,72 @@ active_slot() {
         echo "(none)"
     fi
 }
+
+lib_dir() {
+    local lib_list=$(list_libdirs)
+    if [[ ${lib_list} =~ .*lib64.* && \
+        -n $(ls -d ${USR_PATH}/lib64/mysql-*/ 2> /dev/null) ]] ; then
+        echo "lib64"
+    elif [[ ${lib_list} =~ .*lib32.* && \
+        -n $(ls -d ${USR_PATH}/lib32/mysql-*/ 2> /dev/null) ]] ; then
+        echo "lib32"
+    elif [[ ${lib_list} =~ .*libx32.* && \
+        -n $(ls -d ${USR_PATH}/libx32/mysql-*/ 2> /dev/null) ]] ; then
+        echo "libx32"
+    else
+        echo "lib"
+    fi
+}
+
+
+### Finder Function ###
+# Takes two arguments:
+#   - Absolute path to directory to search
+#   - Pattern to search for
+finder() {
+    local source_dir=$1
+    local pattern=$2
+
+    # Prevent passed patterns from being globbed
+    # If this module is run in /usr, '-name lib*' ends up globbing 'lib*',
+    # passing to 'find' the pattern '-name lib lib32 lib64' and find interprets
+    # those as path arguments causing failure.
+    set -f
+    find -L "${source_dir}" -maxdepth 1 -mindepth 1 ${pattern}
+    set +f
+}
+
+
+### Linker Function ###
+# Takes four arguments:
+#   - Full source path (e.g. /usr/lib/mysql-8.4/lib)
+#   - Pattern to search for
+#   - Full target directory path (e.g. /usr/bin)
+#   - Suffix (Optional) (e.g 8.4 to make /usr/bin/mysql-8.4)
+linker() {
+    local source_dir=$1
+    local pattern=$2
+    local target_dir=$3
+    local suffix=$4
+
+    local findings
+    local link_source
+    local link_target
+    local rel_source
+
+    findings=$(finder "${source_dir}" "${pattern}")
+
+    for link_source in ${findings} ; do
+        link_target="${target_dir%/}/$(basename ${link_source})${suffix:+-}${suffix}"
+
+        # Create relative links so that they work both here and inside the new
+        # root if $ROOT is not "/".
+        rel_source=$(relative_name "${link_source}" "${target_dir}")
+        ln -sfn "${rel_source}" "${link_target}" || \
+            die -q "SYMLINK FAILED: ${rel_source} -> ${link_target}"
+    done
+}
+
 
 get_slots() {
     local slot
@@ -59,18 +138,18 @@ do_list() {
 
         local provider
         local slot
-        local bindir
+        local installdir
         for slot in $(get_slots) ; do
-            bindir="${USR_PATH}/$(lib_dir)/mysql-${slot}/sbin"
+            installdir="${USR_PATH}/$(lib_dir)/mysql-${slot}/"
 
             # The output of `mysql_config --version` also includes "MySQL" in
             # the string, which is a bit redundant.
-            provider=$("${bindir}"/mysql_config --version | \
+            provider=$("${installdir}"/bin/mysql_config --version | \
                 sed 's/[^0-9]*\(.*\)/\1/')
 
             # Unless a file exists that's controlled by the 'server' use flag,
             # report that it's client only.
-            [[ -e "${bindir}/mysqld" ]] || provider+=' (Clients Only)'
+            [[ -e "${installdir}/sbin/mysqld" ]] || provider+=' (Clients Only)'
 
             case "${slot}" in
                 "$(active_slot)" )
@@ -122,10 +201,22 @@ do_set() {
     # If you change this list, you must change the INCLUDE_TARGETS list,
     # too. And, they must be listed in the same order.
     local include_sources=(
-        "${USR_PATH}"/include/mysql-${slot}
-        "${USR_PATH}"/include/mysql-${slot}/mysqlx_version.h
+        "${USR_PATH}"/include/mysql-${slot}/errmsg.h
+        "${USR_PATH}"/include/mysql-${slot}/field_types.h
+        "${USR_PATH}"/include/mysql-${slot}/my_command.h
+        "${USR_PATH}"/include/mysql-${slot}/my_compress.h
+        "${USR_PATH}"/include/mysql-${slot}/my_list.h
+        "${USR_PATH}"/include/mysql-${slot}/mysql.h
+        "${USR_PATH}"/include/mysql-${slot}/mysql/client_plugin.h
+        "${USR_PATH}"/include/mysql-${slot}/mysql/plugin_auth_common.h
+        "${USR_PATH}"/include/mysql-${slot}/mysql/udf_registration_types.h
+        "${USR_PATH}"/include/mysql-${slot}/mysql_com.h
+        "${USR_PATH}"/include/mysql-${slot}/mysql_time.h
+        "${USR_PATH}"/include/mysql-${slot}/mysql_version.h
+        "${USR_PATH}"/include/mysql-${slot}/mysqld_error.h
         "${USR_PATH}"/include/mysql-${slot}/mysqlx_ername.h
         "${USR_PATH}"/include/mysql-${slot}/mysqlx_error.h
+        "${USR_PATH}"/include/mysql-${slot}/mysqlx_version.h
     )
 
     # The linker function cannot accommodate this special purpose.
@@ -163,12 +254,12 @@ do_set() {
         "" "${USR_PATH}/bin"
 
     # Link pkg-config metadata files
-    linker "${USR_PATH}/$(lib_dir)/mysql-${slot}/$(lib_dir)/pkgconfig/" \
+    linker "${USR_PATH}/$(lib_dir)/mysql-${slot}/pkgconfig/" \
         "" "${USR_PATH}/share/pkgconfig/"
 
     # Link man pages
     local mandir mansec
-    for mandir in "${USR_PATH}"/share/mysql-${slot}/man/man{1,3,7} ; do
+    for mandir in "${USR_PATH}"/share/mysql-${slot}/man/man{1,8} ; do
         mansec=$(basename "${mandir}")
         # Because the user could have FEATURES="noman", check the directory
         # exists before using it. (https://bugs.gentoo.org/618294)
