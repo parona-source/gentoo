@@ -84,9 +84,6 @@ RDEPEND="
 		sys-libs/timezone-data
 	)
 "
-# For other stuff to bring us in
-# dev-perl/DBD-mysql is needed by some scripts installed by MySQL
-PDEPEND="perl? ( >=dev-perl/DBD-mysql-2.9004 )"
 
 # https://bugs.gentoo.org/623962
 # tests set TZ for tests leading to failures on musl if sys-libs/timezone-data isnt installed
@@ -138,7 +135,7 @@ pkg_pretend() {
 				CHECKREQS_DISK_BUILD="10G"
 
 				if use elibc_musl; then
-					# <parona@protonmail.com> i've seen it take 17GB on musl with FEATURES="test" USE="perl server"
+					# <parona@protonmail.com> i've seen it take 17GB on musl with FEATURES="test" USE="server"
 					CHECKREQS_DISK_BUILD="18G"
 				fi
 			fi
@@ -156,7 +153,7 @@ pkg_setup() {
 			CHECKREQS_DISK_BUILD="10G"
 
 			if use elibc_musl; then
-				# <parona@protonmail.com> i've seen it take 17GB on musl with FEATURES="test" USE="perl server"
+				# <parona@protonmail.com> i've seen it take 17GB on musl with FEATURES="test" USE="server"
 				CHECKREQS_DISK_BUILD="18G"
 			fi
 
@@ -380,7 +377,7 @@ src_configure() {
 }
 
 # Official test instructions:
-# ulimit -n 16500 && USE='perl server' FEATURES='test userpriv' \
+# ulimit -n 16500 && USE='server' FEATURES='test userpriv' \
 # ebuild mysql-X.X.XX.ebuild digest clean test install
 src_test() {
 	_disable_test() {
@@ -397,7 +394,7 @@ src_test() {
 	local retstatus_tests
 
 	einfo "Official test instructions:"
-	einfo "ulimit -n 16500 && USE='perl server' FEATURES='test userpriv' ebuild ..."
+	einfo "ulimit -n 16500 && USE='server' FEATURES='test userpriv' ebuild ..."
 
 	# Ensure that parallel runs don't die
 	local -x MTR_BUILD_THREAD="$((${RANDOM} % 100))"
@@ -671,18 +668,6 @@ src_install() {
 		bn=$(basename "${f}")
 		dosym "../$(get_libdir)/mysql-${SLOT}/sbin/${bn}" "/usr/sbin/${bn}-${SLOT}"
 	done
-
-	#Remove mytop if perl is not selected
-	[[ -e "${ED}/usr/bin/mytop" ]] && ! use perl && rm -f "${ED}/usr/bin/mytop"
-
-	if use router ; then
-		rm -rf \
-			"${ED}/usr/LICENSE.router" \
-			"${ED}/usr/README.router" \
-			"${ED}/usr/run" \
-			"${ED}/usr/var" \
-			|| die
-	fi
 }
 
 pkg_postinst() {

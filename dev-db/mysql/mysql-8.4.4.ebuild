@@ -41,7 +41,7 @@ SLOT="$(ver_cut 1-2)"
 # -arm -hppa -mips -ppc -x86 -x86-linux
 # -ppc for bug #761715
 KEYWORDS="~amd64 -arm -hppa -mips -ppc ~riscv ~s390 ~sparc -x86 ~amd64-linux -x86-linux ~x64-macos ~x64-solaris"
-IUSE="cjk cracklib debug doc jemalloc numa +perl profiling router selinux +server systemd tcmalloc test test-install"
+IUSE="cjk cracklib debug doc jemalloc numa profiling router selinux +server systemd tcmalloc test test-install"
 RESTRICT="!test? ( test )"
 
 REQUIRED_USE="
@@ -100,9 +100,6 @@ RDEPEND="
 		sys-libs/timezone-data
 	)
 "
-# For other stuff to bring us in
-# dev-perl/DBD-mysql is needed by some scripts installed by MySQL
-PDEPEND="perl? ( >=dev-perl/DBD-mysql-2.9004 )"
 
 # https://bugs.gentoo.org/623962
 # tests set TZ for tests leading to failures on musl if sys-libs/timezone-data isnt installed
@@ -151,7 +148,7 @@ pkg_pretend() {
 	CHECKREQS_DISK_BUILD="3G"
 
 	if has test ${FEATURES} ; then
-		# <parona@protonmail.com> i've seen it take 17GB on musl with FEATURES="test" USE="perl server"
+		# <parona@protonmail.com> i've seen it take 17GB on musl with FEATURES="test" USE="server"
 		CHECKREQS_DISK_BUILD="18G"
 
 		# Bug #213475 - MySQL _will_ object strenuously if your machine is named
@@ -180,7 +177,7 @@ Either expect runtime errors, enable NUMA support in kernel or rebuild the packa
 pkg_setup() {
 	CHECKREQS_DISK_BUILD="3G"
 	if has test ${FEATURES} ; then
-		# <parona@protonmail.com> i've seen it take 17GB on musl with FEATURES="test" USE="perl server"
+		# <parona@protonmail.com> i've seen it take 17GB on musl with FEATURES="test" USE="server"
 		CHECKREQS_DISK_BUILD="18G"
 
 		local aio_max_nr=$(sysctl -n fs.aio-max-nr 2>/dev/null)
@@ -386,7 +383,7 @@ src_compile() {
 }
 
 # Official test instructions:
-# ulimit -n 16500 && USE='perl server' FEATURES='test userpriv' \
+# ulimit -n 16500 && USE='server' FEATURES='test userpriv' \
 # ebuild mysql-X.X.XX.ebuild digest clean test install
 src_test() {
 	_disable_test() {
@@ -403,7 +400,7 @@ src_test() {
 	local retstatus_tests
 
 	einfo "Official test instructions:"
-	einfo "ulimit -n 16500 && USE='perl server' FEATURES='test userpriv' ebuild ..."
+	einfo "ulimit -n 16500 && USE='server' FEATURES='test userpriv' ebuild ..."
 
 	# Try to increase file limits to increase test coverage
 	local ulimit_n
@@ -620,11 +617,6 @@ src_install() {
 	dosym "mysqlcheck" "/usr/$(get_libdir)/mysql-${SLOT}/bin/mysqlrepair"
 	dosym "mysqlcheck" "/usr/$(get_libdir)/mysql-${SLOT}/bin/mysqloptimize"
 
-	# INSTALL_LAYOUT=STANDALONE causes cmake to create a /usr/data dir
-	if [[ -d "${ED}/usr/data" ]] ; then
-		rm -rf "${ED}/usr/data" || die
-	fi
-
 	# Configuration stuff
 	einfo "Building default configuration ..."
 	insinto "${MY_SYSCONFDIR#${EPREFIX}}"
@@ -679,20 +671,6 @@ src_install() {
 		bn=$(basename "${f}")
 		dosym "../$(get_libdir)/mysql-${SLOT}/sbin/${bn}" "/usr/sbin/${bn}-${SLOT}"
 	done
-
-	# Remove mytop if perl is not selected
-	if [[ -e "${ED}/usr/bin/mytop" ]] && ! use perl ; then
-		rm -f "${ED}/usr/bin/mytop" || die
-	fi
-
-	if use router ; then
-		rm -rf \
-			"${ED}/usr/LICENSE.router" \
-			"${ED}/usr/README.router" \
-			"${ED}/usr/run" \
-			"${ED}/usr/var" \
-			|| die
-	fi
 }
 
 pkg_postinst() {
