@@ -629,19 +629,27 @@ src_install() {
 	eprefixify "${TMPDIR}/50-distro-client.cnf"
 	doins "${TMPDIR}/50-distro-client.cnf"
 
-	mycnf_src="my.cnf-8.4.distro-server"
-	sed -e "s!@DATADIR@!${MY_DATADIR}!g" \
-		"${FILESDIR}/${mycnf_src}" \
-		> "${TMPDIR}/my.cnf.ok" || die
+	if use server; then
+		sed -e "s|@SLOT@|${SLOT}|g" -e "s|@LIBDIR@|$(get_libdir)|g" \
+			"${FILESDIR}/${PN}.confd" | newconfd - "${PN}-${SLOT}"
 
-	if use prefix ; then
-		sed -i -r -e '/^user[[:space:]]*=[[:space:]]*mysql$/d' \
-			"${TMPDIR}/my.cnf.ok" || die
+		sed -e "s|@SLOT@|${SLOT}|g" -e "s|@LIBDIR@|$(get_libdir)|g" \
+			"${FILESDIR}/${PN}.init" | newinitd - "${PN}-${SLOT}"
+
+		mycnf_src="my.cnf-8.4.distro-server"
+		sed -e "s!@DATADIR@!${MY_DATADIR}!g" \
+			"${FILESDIR}/${mycnf_src}" \
+			> "${TMPDIR}/my.cnf.ok" || die
+
+		if use prefix ; then
+			sed -i -r -e '/^user[[:space:]]*=[[:space:]]*mysql$/d' \
+				"${TMPDIR}/my.cnf.ok" || die
+		fi
+
+		eprefixify "${TMPDIR}/my.cnf.ok"
+
+		newins "${TMPDIR}/my.cnf.ok" 50-distro-server.cnf
 	fi
-
-	eprefixify "${TMPDIR}/my.cnf.ok"
-
-	newins "${TMPDIR}/my.cnf.ok" 50-distro-server.cnf
 
 	docompress /usr/share/mysql-${SLOT}/man/man{1,8}
 

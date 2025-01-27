@@ -640,6 +640,13 @@ src_install() {
 
 	newins "${TMPDIR}/my.cnf.ok" 50-distro-server.cnf
 
+	if use server ; then
+		sed -e "s|@SLOT@|${SLOT}|g" -e "s|@LIBDIR@|$(get_libdir)|g" \
+			"${FILESDIR}/${PN}.confd" | newconfd - "${PN}-${SLOT}"
+		sed -e "s|@SLOT@|${SLOT}|g" -e "s|@LIBDIR@|$(get_libdir)|g" \
+			"${FILESDIR}/${PN}.init" | newinitd - "${PN}-${SLOT}"
+	fi
+
 	docompress /usr/share/mysql-${SLOT}/man/man{1,8}
 
 	# Create slot specific man pages
