@@ -41,7 +41,7 @@ SLOT="$(ver_cut 1-2)"
 # -arm -hppa -mips -ppc -x86 -x86-linux
 # -ppc for bug #761715
 KEYWORDS="~amd64 -arm -hppa -mips -ppc ~riscv ~s390 ~sparc -x86 ~amd64-linux -x86-linux ~x64-macos ~x64-solaris"
-IUSE="cjk cracklib debug doc jemalloc numa +perl profiling router selinux +server tcmalloc test test-install"
+IUSE="cjk cracklib debug doc jemalloc numa +perl profiling router selinux +server systemd tcmalloc test test-install"
 RESTRICT="!test? ( test )"
 
 REQUIRED_USE="
@@ -92,7 +92,9 @@ RDEPEND="
 	!dev-db/mysql-cluster
 	!dev-db/mysql:0
 	!dev-db/mysql:5.7
-	!dev-db/mysql:8.0
+	!<dev-db/mysql-8.0.41-r100
+	!dev-db/mysql-init-scripts
+	app-eselect/eselect-mysql
 	selinux? ( sec-policy/selinux-mysql )
 	!prefix? (
 		acct-group/mysql
@@ -143,9 +145,9 @@ PATCHES=(
 )
 
 mysql_init_vars() {
-	: ${MY_SHAREDSTATEDIR="${EPREFIX}/usr/share/mysql"}
-	: ${MY_SYSCONFDIR="${EPREFIX}/etc/mysql"}
-	: ${MY_LOCALSTATEDIR="${EPREFIX}/var/lib/mysql"}
+	: ${MY_SHAREDSTATEDIR="${EPREFIX}/usr/share/mysql-${SLOT}"}
+	: ${MY_SYSCONFDIR="${EPREFIX}/etc/mysql-${SLOT}"}
+	: ${MY_LOCALSTATEDIR="${EPREFIX}/var/lib/mysql/${SLOT}"}
 	: ${MY_LOGDIR="${EPREFIX}/var/log/mysql"}
 	MY_DATADIR="${MY_LOCALSTATEDIR}"
 
@@ -234,29 +236,32 @@ src_configure() {
 	local mycmakeargs=(
 		-DCOMPILATION_COMMENT="Gentoo Linux ${PF}"
 
-		-DINSTALL_BINDIR="bin"
+		-DINSTALL_BINDIR="$(get_libdir)/mysql-${SLOT}/bin"
 		-DINSTALL_DOCDIR="share/doc/${PF}"
 		-DINSTALL_DOCREADMEDIR="share/doc/${PF}"
-		-DINSTALL_INCLUDEDIR="include/mysql"
+		-DINSTALL_INCLUDEDIR="include/mysql-${SLOT}"
 		-DINSTALL_INFODIR="share/info"
-		-DINSTALL_LIBDIR="$(get_libdir)"
-		-DINSTALL_PRIV_LIBDIR="$(get_libdir)/mysql/private"
-		-DINSTALL_MANDIR="share/man"
-		-DINSTALL_MYSQLDATADIR="${EPREFIX}/var/lib/mysql"
-		-DINSTALL_MYSQLSHAREDIR="share/mysql"
-		-DINSTALL_PLUGINDIR="$(get_libdir)/mysql/plugin"
-		-DINSTALL_SBINDIR="sbin"
-		-DINSTALL_SUPPORTFILESDIR="${EPREFIX}/usr/share/mysql"
-		-DMYSQL_DATADIR="${EPREFIX}/var/lib/mysql"
+		-DINSTALL_LIBDIR="$(get_libdir)/mysql-${SLOT}"
+		-DINSTALL_PRIV_LIBDIR="$(get_libdir)/mysql-${SLOT}/private"
+		-DINSTALL_MANDIR="share/mysql-${SLOT}/man"
+		-DINSTALL_MYSQLDATADIR="${EPREFIX}/var/lib/mysql-${SLOT}"
+		-DINSTALL_MYSQLSHAREDIR="share/mysql-${SLOT}"
+		-DINSTALL_PLUGINDIR="$(get_libdir)/mysql-${SLOT}/plugin"
+		-DINSTALL_SBINDIR="$(get_libdir)/mysql-${SLOT}/sbin"
+		-DINSTALL_SUPPORTFILESDIR="${EPREFIX}/usr/share/mysql-${SLOT}"
+		-DMYSQL_DATADIR="${EPREFIX}/var/lib/mysql/${SLOT}"
 		-DMYSQL_UNIX_ADDR="${EPREFIX}/var/run/mysqld/mysqld.sock"
-		-DROUTER_INSTALL_DOCDIR="share/doc/${PF}"
-		-DROUTER_INSTALL_LOGROTATEDIR="${EPREFIX}/etc/logrotate.d"
-		-DSYSCONFDIR="${EPREFIX}/etc/mysql"
+		-DSYSCONFDIR="${EPREFIX}/etc/mysql-${SLOT}"
 
 		-DENABLED_PROFILING=$(usex profiling)
 		-DWITHOUT_SERVER=$(usex !server)
 		-DWITH_LIBWRAP=ON
+
 		-DWITH_ROUTER=$(usex router)
+		-DROUTER_INSTALL_PLUGINDIR="$(get_libdir)/mysql-${SLOT}/mysqlrouter"
+		-DROUTER_INSTALL_LIBDIR="$(get_libdir)/mysql-${SLOT}/mysqlrouter/private"
+		-DROUTER_INSTALL_DOCDIR="share/doc/${PF}"
+		-DROUTER_INSTALL_LOGROTATEDIR="${EPREFIX}/etc/logrotate.d"
 
 		# Webauthn plugins not available in community build
 		# https://dev.mysql.com/doc/refman/8.4/en/webauthn-pluggable-authentication.html
@@ -282,8 +287,8 @@ src_configure() {
 		-DWITH_ZLIB=system
 		-DWITH_ZSTD=system
 
-		# Installs support files that would conflict with dev-db/mysql-init-scripts
-		-DWITH_SYSTEMD=0
+		-DWITH_SYSTEMD=$(usex systemd)
+		-DSYSTEMD_SERVICE_NAME="mysqld-${SLOT}"
 
 		# These are installed via dev-db/mysql-connector-c
 		-DWITHOUT_CLIENTLIBS=ON
@@ -317,7 +322,7 @@ src_configure() {
 		-DWITH_UNIT_TESTS=$(usex test)
 		# This is the expected location for upstream RPM's and the script will search for location relative to it.
 		# Other locations will not work.
-		-DINSTALL_MYSQLTESTDIR=$(usex test-install 'share/mysql-test' 0)
+		-DINSTALL_MYSQLTESTDIR=$(usex test-install "share/mysql-test-${SLOT}" 0)
 	)
 
 	if use server ; then
@@ -622,9 +627,9 @@ src_install() {
 
 	# Convenience links
 	einfo "Making Convenience links for mysqlcheck multi-call binary"
-	dosym "mysqlcheck" "/usr/bin/mysqlanalyze"
-	dosym "mysqlcheck" "/usr/bin/mysqlrepair"
-	dosym "mysqlcheck" "/usr/bin/mysqloptimize"
+	dosym "mysqlcheck" "/usr/$(get_libdir)/mysql-${SLOT}/bin/mysqlanalyze"
+	dosym "mysqlcheck" "/usr/$(get_libdir)/mysql-${SLOT}/bin/mysqlrepair"
+	dosym "mysqlcheck" "/usr/$(get_libdir)/mysql-${SLOT}/bin/mysqloptimize"
 
 	# INSTALL_LAYOUT=STANDALONE causes cmake to create a /usr/data dir
 	if [[ -d "${ED}/usr/data" ]] ; then
@@ -656,6 +661,35 @@ src_install() {
 	eprefixify "${TMPDIR}/my.cnf.ok"
 
 	newins "${TMPDIR}/my.cnf.ok" 50-distro-server.cnf
+
+	docompress /usr/share/mysql-${SLOT}/man/man{1,8}
+
+	# Create slot specific man pages
+	for mansec in 1 8 ; do
+		local rel_manpath="../../mysql-${SLOT}/man/man${mansec}"
+		mkdir -p "${ED}"/usr/share/man/man${mansec} || die "making man dir"
+		pushd "${ED}"/usr/share/man/man${mansec} > /dev/null || die "pushd failed"
+
+		for f in "${ED}/usr/share/mysql-${SLOT}/man/man${mansec}"/* ; do
+			bn=$(basename "${f}")
+			slotted_name=${bn%.${mansec}}-${SLOT}.${mansec}
+			echo ".so ${rel_manpath}/${bn}" > ${slotted_name}
+		done
+
+		popd > /dev/null
+	done
+
+	# Make slot specific links to programs
+	local f n
+	for f in $(find "${ED}/usr/$(get_libdir)/mysql-${SLOT}/bin" -mindepth 1 -maxdepth 1); do
+		bn=$(basename "${f}")
+		dosym "../$(get_libdir)/mysql-${SLOT}/bin/${bn}" "/usr/bin/${bn}-${SLOT}"
+	done
+	local f n
+	for f in $(find "${ED}/usr/$(get_libdir)/mysql-${SLOT}/sbin" -mindepth 1 -maxdepth 1); do
+		bn=$(basename "${f}")
+		dosym "../$(get_libdir)/mysql-${SLOT}/sbin/${bn}" "/usr/sbin/${bn}-${SLOT}"
+	done
 
 	# Remove mytop if perl is not selected
 	if [[ -e "${ED}/usr/bin/mytop" ]] && ! use perl ; then
