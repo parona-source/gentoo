@@ -94,6 +94,7 @@ RDEPEND="
 	!dev-db/mysql:5.7
 	!<dev-db/mysql-8.0.41-r100
 	!dev-db/mysql-init-scripts
+	!dev-db/mysql-connector-c
 	app-eselect/eselect-mysql
 	selinux? ( sec-policy/selinux-mysql )
 	!prefix? (
@@ -221,6 +222,8 @@ src_prepare() {
 		echo > "${S}/support-files/SELinux/CMakeLists.txt" || die
 	fi
 
+	rm "${WORKDIR}"/mysql-patches/*-cmake-build-without-client-libs-and-tools.patch || die
+
 	cmake_src_prepare
 }
 
@@ -289,9 +292,6 @@ src_configure() {
 
 		-DWITH_SYSTEMD=$(usex systemd)
 		-DSYSTEMD_SERVICE_NAME="mysqld-${SLOT}"
-
-		# These are installed via dev-db/mysql-connector-c
-		-DWITHOUT_CLIENTLIBS=ON
 
 		# Building everything as shared breaks upstream assumptions.
 		# For example bundled abseil is excpected to be static and is therefore not installed.
