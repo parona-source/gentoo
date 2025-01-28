@@ -2,7 +2,7 @@
 # Copyright 2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-MYSQLD="/usr/@LIBDIR@/mysql-@SLOT@/bin/mysqld"
+MYSQLD="/usr/@LIBDIR@/mysql-@SLOT@/sbin/mysqld"
 
 description="MySQL @SLOT@ -- Fast, multi-threaded, multi-user SQL database server"
 
