@@ -1,4 +1,4 @@
-# Copyright 1999-2024 Gentoo Authors
+# Copyright 1999-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 # @ECLASS: distutils-r1.eclass
@@ -133,6 +133,8 @@
 # - setuptools - distutils or setuptools (incl. legacy mode)
 #
 # - sip - sipbuild backend
+#
+# - whey - whey backend
 #
 # - standalone - standalone build systems without external deps
 #   (used for bootstrapping).
@@ -311,6 +313,11 @@ _distutils_set_globals() {
 			sip)
 				bdep+='
 					>=dev-python/sip-6.8.3[${PYTHON_USEDEP}]
+				'
+				;;
+			whey)
+				bdep+='
+					>=dev-python/whey-0.1.1[${PYTHON_USEDEP}]
 				'
 				;;
 			standalone)
@@ -904,6 +911,11 @@ _distutils-r1_print_package_versions() {
 					dev-python/sip
 				)
 				;;
+			whey)
+				packages+=(
+					dev-python/whey
+				)
+				;;
 		esac
 	else
 		case ${DISTUTILS_USE_SETUPTOOLS} in
@@ -1096,6 +1108,9 @@ _distutils-r1_backend_to_key() {
 			;;
 		sipbuild.api)
 			echo sip
+			;;
+		whey)
+			echo whey
 			;;
 		*)
 			die "Unknown backend: ${backend}"
