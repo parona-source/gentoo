@@ -1,0 +1,111 @@
+https://bugs.gentoo.org/878651
+https://github.com/python-coincidence/coincidence/pull/63
+
+From 044d393a77d6e94aee51574280c94e3f9f84e603 Mon Sep 17 00:00:00 2001
+From: Maxwell G <maxwell@gtmx.me>
+Date: Thu, 23 Nov 2023 21:48:44 +0000
+Subject: [PATCH 1/4] tests: use tomllib/tomli instead of unmaintained toml
+
+The toml library is unmaintained upstream. It has been superseded by
+tomllib in the Python 3.11+ stdlib and the tomli package for older
+Python versions.
+--- a/tests/requirements.txt
++++ b/tests/requirements.txt
+@@ -7,4 +7,4 @@ iniconfig!=1.1.0,>=1.0.1
+ pytest-cov>=2.8.1
+ pytest-randomly>=3.7.0
+ pytest-timeout>=1.4.2
+-toml>=0.10.2
++tomli>=2.0.1; python_version < "3.11"
+--- a/tests/test_regressions.py
++++ b/tests/test_regressions.py
+@@ -7,12 +7,18 @@
+ 
+ # 3rd party
+ import pytest
+-import toml
+ from domdf_python_tools.compat import PYPY37_PLUS
+ from domdf_python_tools.paths import PathPlus
+ from domdf_python_tools.stringlist import StringList
+ from pytest_regressions.file_regression import FileRegressionFixture
+ 
++if sys.version_info >= (3, 11):
++    # stdlib
++    import tomllib
++else:
++    # 3rd party
++    import tomli as tomllib
++
+ # this package
+ from coincidence.regressions import (
+ 		AdvancedDataRegressionFixture,
+@@ -100,7 +106,7 @@ def __len__(self) -> int:
+ 						CustomSequence([MappingProxyType({'a': 1})]), id="Nested_CustomSequence_MappingProxyType"
+ 						),
+ 				pytest.param(CustomMapping({'a': Count(a=1, b=2, c=3)}), id="Nested_CustomMapping_NamedTuple"),
+-				pytest.param(toml.loads(some_toml)["section"]["table"], id="Toml_InlineTableDict"),
++				pytest.param(tomllib.loads(some_toml)["section"]["table"], id="Toml_InlineTableDict"),
+ 				pytest.param(pathlib.PurePath("/foo/bar/baz"), id="pathlib_purepath"),
+ 				pytest.param(pathlib.PurePosixPath("/foo/bar/baz"), id="pathlib_pureposixpath"),
+ 				pytest.param(pathlib.PureWindowsPath(r"c:\foo\bar\baz"), id="pathlib_purewindowspath"),
+
+From cf852c5237be9d04415605bc97e7cd068f0c0e72 Mon Sep 17 00:00:00 2001
+From: "pre-commit-ci[bot]"
+ <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+Date: Thu, 23 Nov 2023 21:50:56 +0000
+Subject: [PATCH 2/4] [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+for more information, see https://pre-commit.ci
+--- a/tests/test_regressions.py
++++ b/tests/test_regressions.py
+@@ -13,11 +13,11 @@
+ from pytest_regressions.file_regression import FileRegressionFixture
+ 
+ if sys.version_info >= (3, 11):
+-    # stdlib
+-    import tomllib
++	# 3rd party
++	import tomllib
+ else:
+-    # 3rd party
+-    import tomli as tomllib
++	# 3rd party
++	import tomli as tomllib
+ 
+ # this package
+ from coincidence.regressions import (
+
+From ac7d25deda08acc1c3941efc86e0323a7011a80c Mon Sep 17 00:00:00 2001
+From: Maxwell G <maxwell@gtmx.me>
+Date: Fri, 24 Nov 2023 04:19:13 +0000
+Subject: [PATCH 3/4] tests: fix coverage for `if sys.version_info ...` block
+
+--- a/tests/test_regressions.py
++++ b/tests/test_regressions.py
+@@ -12,10 +12,10 @@
+ from domdf_python_tools.stringlist import StringList
+ from pytest_regressions.file_regression import FileRegressionFixture
+ 
+-if sys.version_info >= (3, 11):
++if sys.version_info >= (3, 11):  # pragma: no cover
+ 	# 3rd party
+ 	import tomllib
+-else:
++else:  # pragma: no cover
+ 	# 3rd party
+ 	import tomli as tomllib
+ 
+
+From f12251f3266e0b8d2f1f29f383bd5d5b24c71cd7 Mon Sep 17 00:00:00 2001
+From: Maxwell G <maxwell@gtmx.me>
+Date: Fri, 24 Nov 2023 04:24:32 +0000
+Subject: [PATCH 4/4] tests: pin tomli to version compatible with py36
+
+--- a/tests/requirements.txt
++++ b/tests/requirements.txt
+@@ -7,4 +7,4 @@ iniconfig!=1.1.0,>=1.0.1
+ pytest-cov>=2.8.1
+ pytest-randomly>=3.7.0
+ pytest-timeout>=1.4.2
+-tomli>=2.0.1; python_version < "3.11"
++tomli>=1.2.3; python_version < "3.11"
