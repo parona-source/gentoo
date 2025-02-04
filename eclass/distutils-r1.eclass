@@ -127,6 +127,8 @@
 #
 # - uv-build - uv-build backend (using dev-python/uv)
 #
+# - whey - whey backend
+#
 # The variable needs to be set before the inherit line.  If another
 # value than "standalone" and "no" is used, The eclass adds appropriate
 # build-time dependencies, verifies the value and calls the appropriate
@@ -310,6 +312,11 @@ _distutils_set_globals() {
 		uv-build)
 			bdep+='
 				dev-python/uv-build[${PYTHON_USEDEP}]
+			'
+			;;
+		whey)
+			bdep+='
+				>=dev-python/whey-0.1.1[${PYTHON_USEDEP}]
 			'
 			;;
 		*)
@@ -824,6 +831,11 @@ _distutils-r1_print_package_versions() {
 				dev-python/uv-build
 			)
 			;;
+		whey)
+			packages+=(
+				dev-python/whey
+			)
+			;;
 	esac
 
 	local pkg
@@ -905,6 +917,9 @@ _distutils-r1_key_to_backend() {
 			;;
 		uv-build)
 			echo uv_build
+			;;
+		whey)
+			echo whey
 			;;
 		*)
 			die "Unknown DISTUTILS_USE_PEP517 key: ${key}"
