@@ -196,6 +196,13 @@ BDEPEND="
 	doc? (
 		>=dev-libs/libxml2-2.6.32
 		>=dev-libs/libxslt-1.1.19
+		dev-python/myst-parser[${PYTHON_USEDEP}]
+		dev-python/sphinx-copybutton[${PYTHON_USEDEP}]
+		dev-python/sphinx-design[${PYTHON_USEDEP}]
+		dev-python/sphinx-reredirects[${PYTHON_USEDEP}]
+		dev-python/sphinx-tags[${PYTHON_USEDEP}]
+		dev-python/sphinx-toolbox[${PYTHON_USEDEP}]
+		dev-python/sphinx[${PYTHON_USEDEP}]
 		media-gfx/graphviz
 		dev-python/sphinx[${PYTHON_USEDEP}]
 		dev-python/myst-parser[${PYTHON_USEDEP}]
