@@ -1,0 +1,3 @@
+# @GENTOO_PORTAGE_EPREFIX@/etc/mysql-@SLOT@/my.cnf: The global mysql configuration file.
+
+!includedir @GENTOO_PORTAGE_EPREFIX@/etc/mysql-@SLOT@/mysql.d

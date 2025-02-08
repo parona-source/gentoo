@@ -21,8 +21,6 @@ RDEPEND="
 	!dev-db/mysql:0
 	!dev-db/mysql:5.7
 	!<dev-db/mysql-8.0.41-r100
-	!dev-db/mysql-init-scripts
-	!dev-db/mysql-connector-c
 "
 
 src_install() {
@@ -30,8 +28,6 @@ src_install() {
 	doins "${FILESDIR}"/mysql.eselect
 
 	dosym eselect /usr/bin/mysql-config
-
-	keepdir /usr/include/mysql/mysql
 }
 
 pkg_postinst() {

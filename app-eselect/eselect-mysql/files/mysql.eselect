@@ -12,25 +12,6 @@ VERSION="0"
 # constantly.
 USR_PATH="${EROOT%/}/usr"
 
-INCLUDE_TARGETS=(
-    "${USR_PATH}"/include/mysql/errmsg.h
-    "${USR_PATH}"/include/mysql/field_types.h
-    "${USR_PATH}"/include/mysql/my_command.h
-    "${USR_PATH}"/include/mysql/my_compress.h
-    "${USR_PATH}"/include/mysql/my_list.h
-    "${USR_PATH}"/include/mysql/mysql.h
-    "${USR_PATH}"/include/mysql/mysql/client_plugin.h
-    "${USR_PATH}"/include/mysql/mysql/plugin_auth_common.h
-    "${USR_PATH}"/include/mysql/mysql/udf_registration_types.h
-    "${USR_PATH}"/include/mysql/mysql_com.h
-    "${USR_PATH}"/include/mysql/mysql_time.h
-    "${USR_PATH}"/include/mysql/mysql_version.h
-    "${USR_PATH}"/include/mysql/mysqld_error.h
-    "${USR_PATH}"/include/mysql/mysqlx_ername.h
-    "${USR_PATH}"/include/mysql/mysqlx_error.h
-    "${USR_PATH}"/include/mysql/mysqlx_version.h
-)
-
 active_slot() {
     # ${USR_PATH}/share/mysql is a symlink to the active
     # slot. See if it's there, then find out where it links to.
@@ -57,7 +38,6 @@ lib_dir() {
         echo "lib"
     fi
 }
-
 
 ### Finder Function ###
 # Takes two arguments:
@@ -116,9 +96,9 @@ get_slots() {
         -mindepth 1 -maxdepth 1 -type d -name 'mysql-*' | \
         sed -re 's#.*([1-9][0-9.]+)$#\1#' | sort -n)
     do
-        # Check that mysql_config exists for this slot, otherwise we have
+        # Check that mysqlcheck exists for this slot, otherwise we have
         # a false positive.
-        [[ -x "${USR_PATH}/$(lib_dir)/mysql-${slot}/bin/mysql_config" ]] && \
+        [[ -x "${USR_PATH}/$(lib_dir)/mysql-${slot}/bin/mysqlcheck" ]] && \
             found_slots+=( ${slot} )
     done
 
@@ -142,10 +122,10 @@ do_list() {
         for slot in $(get_slots) ; do
             installdir="${USR_PATH}/$(lib_dir)/mysql-${slot}/"
 
-            # The output of `mysql_config --version` also includes "MySQL" in
+            # The output of `mysqlcheck --version` also includes "MySQL" in
             # the string, which is a bit redundant.
-            provider=$("${installdir}"/bin/mysql_config --version | \
-                sed 's/[^0-9]*\(.*\)/\1/')
+            provider=$("${installdir}"/bin/mysqlcheck --version | \
+                sed 's/.* Ver \([0-9]*.*\) for .*/\1/')
 
             # Unless a file exists that's controlled by the 'server' use flag,
             # report that it's client only.
@@ -195,47 +175,8 @@ do_set() {
 
     echo -ne "Setting ${slot} as the default..."
 
-    # Sources for header files
-    # Targets are listed in the global variable INCLUDE_TARGETS.
-    #
-    # If you change this list, you must change the INCLUDE_TARGETS list,
-    # too. And, they must be listed in the same order.
-    local include_sources=(
-        "${USR_PATH}"/include/mysql-${slot}/errmsg.h
-        "${USR_PATH}"/include/mysql-${slot}/field_types.h
-        "${USR_PATH}"/include/mysql-${slot}/my_command.h
-        "${USR_PATH}"/include/mysql-${slot}/my_compress.h
-        "${USR_PATH}"/include/mysql-${slot}/my_list.h
-        "${USR_PATH}"/include/mysql-${slot}/mysql.h
-        "${USR_PATH}"/include/mysql-${slot}/mysql/client_plugin.h
-        "${USR_PATH}"/include/mysql-${slot}/mysql/plugin_auth_common.h
-        "${USR_PATH}"/include/mysql-${slot}/mysql/udf_registration_types.h
-        "${USR_PATH}"/include/mysql-${slot}/mysql_com.h
-        "${USR_PATH}"/include/mysql-${slot}/mysql_time.h
-        "${USR_PATH}"/include/mysql-${slot}/mysql_version.h
-        "${USR_PATH}"/include/mysql-${slot}/mysqld_error.h
-        "${USR_PATH}"/include/mysql-${slot}/mysqlx_ername.h
-        "${USR_PATH}"/include/mysql-${slot}/mysqlx_error.h
-        "${USR_PATH}"/include/mysql-${slot}/mysqlx_version.h
-    )
-
-    # The linker function cannot accommodate this special purpose.
-    local rel_source
-    local i
-    for (( i=0; $i < ${#include_sources[@]}; i++ )) ; do
-        # Some headers are present only in specific versions of MySQL
-        [[ -e ${include_sources[$i]} ]] || continue
-
-        # Create relative links so that they work both here and inside a new
-        # root if $ROOT is not "/"
-        rel_source=$(relative_name "${include_sources[$i]}" "$(dirname "${INCLUDE_TARGETS[$i]}")")
-
-        ln -sfn "$rel_source" "${INCLUDE_TARGETS[$i]}" || \
-            die -q "SYMLINK FAILED: $rel_source -> ${INCLUDE_TARGETS[$i]}"
-    done
-
     # Link modules to /usr/lib{,32,64}/
-   local x
+    local x
     for x in $(list_libdirs) ; do
         if [[ -d "${USR_PATH}/${x}/mysql-${slot}/${x}" ]] ; then
             # 'linker' function doesn't work for linking directories.
@@ -253,13 +194,11 @@ do_set() {
     linker "${USR_PATH}/$(lib_dir)/mysql-${slot}/bin/" \
         "" "${USR_PATH}/bin"
 
-    # Link binaries to /usr/sbin/
-    linker "${USR_PATH}/$(lib_dir)/mysql-${slot}/sbin/" \
-        "" "${USR_PATH}/sbin"
-
-    # Link pkg-config metadata files
-    linker "${USR_PATH}/$(lib_dir)/mysql-${slot}/pkgconfig/" \
-        "" "${USR_PATH}/share/pkgconfig/"
+    if [[ -d "${USR_PATH}/$(lib_dir)/mysql-${slot}/sbin" ]]; then
+        # Link binaries to /usr/sbin/
+        linker "${USR_PATH}/$(lib_dir)/mysql-${slot}/sbin/" \
+            "" "${USR_PATH}/sbin"
+    fi
 
     # Link man pages
     local mandir mansec
@@ -288,11 +227,7 @@ describe_unset() {
 
 # Undo everything done by do_set().
 do_unset() {
-    local slot=$1
-    if [[ ${slot} != $(active_slot) ]] ; then
-        echo "Slot already inactive; no work to do."
-        return 0
-    fi
+    local slot=$(active_slot)
 
     # Get the file path that the link is pointing to. If it has the string
     # "mysql-${slot}" somewhere in it, then it's a link that this module is
@@ -307,11 +242,10 @@ do_unset() {
 
     # Start with some known locations that are, or will contain, symlinks.
     local paths=(
-        "${INCLUDE_TARGETS[@]}"
         "${USR_PATH}"/share/man/man{1,8}
         "${USR_PATH}/share/mysql"
         "${USR_PATH}/bin"
-        "${USR_PATH}/share/pkgconfig"
+        "${USR_PATH}/sbin"
     )
 
     local lib
@@ -340,6 +274,7 @@ do_unset() {
         for l in $(find "${path}" -mindepth 1 -maxdepth 1 -type l) ; do
             # Skip the slot specific links (e.g., psql96) in /usr/bin and
             # /usr/share/man as they're managed by their ebuilds
+            [[ ${l} == ${USR_PATH}/bin/*${slot/.} ]] && continue
             [[ ${l} == ${USR_PATH}/bin/*${slot/.} ]] && continue
             [[ ${l} == ${USR_PATH}/share/man/man?/*${slot/.}* ]] && continue
 

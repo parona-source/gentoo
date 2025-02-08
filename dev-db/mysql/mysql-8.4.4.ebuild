@@ -86,7 +86,9 @@ DEPEND="
 "
 RDEPEND="
 	${COMMON_DEPEND}
-	app-eselect/eselect-mysql
+	server? (
+		dev-db/mysql-connector-c
+	)
 	selinux? ( sec-policy/selinux-mysql )
 	!prefix? (
 		acct-group/mysql
@@ -100,6 +102,8 @@ RDEPEND="
 		sys-libs/timezone-data
 	)
 "
+
+PDEPEND="app-eselect/eselect-mysql"
 
 # https://bugs.gentoo.org/623962
 # tests set TZ for tests leading to failures on musl if sys-libs/timezone-data isnt installed
@@ -209,8 +213,8 @@ src_prepare() {
 		echo > "${S}/support-files/SELinux/CMakeLists.txt" || die
 	fi
 
-	rm "${WORKDIR}"/mysql-patches/*-cmake-Fix-minimal-build.patch || die
-	rm "${WORKDIR}"/mysql-patches/*-cmake-build-without-client-libs-and-tools.patch || die
+	#rm "${WORKDIR}"/mysql-patches/*-cmake-Fix-minimal-build.patch || die
+	#rm "${WORKDIR}"/mysql-patches/*-cmake-build-without-client-libs-and-tools.patch || die
 
 	cmake_src_prepare
 }
@@ -251,6 +255,9 @@ src_configure() {
 		-DROUTER_INSTALL_LIBDIR="$(get_libdir)/mysql-${SLOT}/mysqlrouter/private"
 		-DROUTER_INSTALL_DOCDIR="share/doc/${PF}"
 		-DROUTER_INSTALL_LOGROTATEDIR="${EPREFIX}/etc/logrotate.d"
+
+		# These are installed via dev-db/mysql-connector-c
+		-DWITHOUT_CLIENTLIBS=YES
 
 		# Webauthn plugins not available in community build
 		# https://dev.mysql.com/doc/refman/8.4/en/webauthn-pluggable-authentication.html
@@ -450,6 +457,7 @@ src_test() {
 	sed \
 		-e "s/@GENTOO_PORTAGE_EPREFIX@/${EPREFIX}/" \
 		-e "s/@DATADIR@/${MY_DATADIR}/" \
+		-e "s|@SLOT@|${SLOT}|" \
 		"${FILESDIR}"/my.cnf-8.4.distro-server > "${T}"/my.cnf || die
 	local -x PATH_CONFIG_FILE="${T}/my.cnf"
 
@@ -622,11 +630,11 @@ src_install() {
 	einfo "Building default configuration ..."
 	insinto "${MY_SYSCONFDIR#${EPREFIX}}"
 	[[ -f "${S}/scripts/mysqlaccess.conf" ]] && doins "${S}"/scripts/mysqlaccess.conf
-	cp "${FILESDIR}/my.cnf-5.7" "${TMPDIR}/my.cnf" || die
+	sed -e "s|@SLOT@|${SLOT}|" "${FILESDIR}/my.cnf-8.0" > "${TMPDIR}/my.cnf" || die
 	eprefixify "${TMPDIR}/my.cnf"
 	doins "${TMPDIR}/my.cnf"
 	insinto "${MY_SYSCONFDIR#${EPREFIX}}/mysql.d"
-	cp "${FILESDIR}/my.cnf-8.4.distro-client" "${TMPDIR}/50-distro-client.cnf" || die
+	sed -e "s|@SLOT@|${SLOT}|" "${FILESDIR}/my.cnf-8.4.distro-client" > "${TMPDIR}/50-distro-client.cnf" || die
 	eprefixify "${TMPDIR}/50-distro-client.cnf"
 	doins "${TMPDIR}/50-distro-client.cnf"
 
@@ -639,6 +647,7 @@ src_install() {
 
 		mycnf_src="my.cnf-8.4.distro-server"
 		sed -e "s!@DATADIR@!${MY_DATADIR}!g" \
+			-e "s|@SLOT@|${SLOT}|" \
 			"${FILESDIR}/${mycnf_src}" \
 			> "${TMPDIR}/my.cnf.ok" || die
 
@@ -693,9 +702,9 @@ pkg_postinst() {
 	# Note about configuration change
 	einfo
 	elog "This version of ${PN} reorganizes the configuration from a single my.cnf"
-	elog "to several files in /etc/mysql/mysql.d."
-	elog "Please backup any changes you made to /etc/mysql/my.cnf"
-	elog "and add them as a new file under /etc/mysql/mysql.d with a .cnf extension."
+	elog "to several files in /etc/mysql-${SLOT}/mysql.d."
+	elog "Please backup any changes you made to /etc/mysql-${SLOT}/my.cnf"
+	elog "and add them as a new file under /etc/mysql-${SLOT}/mysql.d with a .cnf extension."
 	elog "You may have as many files as needed and they are read alphabetically."
 	elog "Be sure the options have the appropriate section headers, i.e. [mysqld]."
 	einfo
@@ -715,6 +724,8 @@ pkg_postinst() {
 }
 
 pkg_config() {
+	use server || die "USE flag 'server' not enabled. Nothing to configure"
+
 	_getoptval() {
 		local section="$1"
 		local flag="--${2}="
@@ -778,12 +789,12 @@ pkg_config() {
 		done
 	}
 
-	local mysqld_binary="${EROOT}/usr/sbin/mysqld"
+	local mysqld_binary="${EROOT}/usr/$(get_libdir)/mysql-${SLOT}/sbin/mysqld"
 	if [[ ! -x "${mysqld_binary}" ]] ; then
 		die "'${mysqld_binary}' not found! Please re-install ${CATEGORY}/${PN}!"
 	fi
 
-	local mysql_binary="${EROOT}/usr/bin/mysql"
+	local mysql_binary="${EROOT}/usr/$(get_libdir)/mysql-${SLOT}/bin/mysql"
 	if [[ ! -x "${mysql_binary}" ]] ; then
 		die "'${mysql_binary}' not found! Please re-install ${CATEGORY}/${PN}!"
 	fi

@@ -70,7 +70,6 @@ DEPEND="
 "
 RDEPEND="
 	${COMMON_DEPEND}
-	app-eselect/eselect-mysql
 	selinux? ( sec-policy/selinux-mysql )
 	!prefix? (
 		acct-group/mysql
@@ -84,6 +83,8 @@ RDEPEND="
 		sys-libs/timezone-data
 	)
 "
+
+PDEPEND="app-eselect/eselect-mysql"
 
 # https://bugs.gentoo.org/623962
 # tests set TZ for tests leading to failures on musl if sys-libs/timezone-data isnt installed
@@ -116,8 +117,8 @@ PATCHES=(
 
 mysql_init_vars() {
 	: ${MY_SHAREDSTATEDIR="${EPREFIX}/usr/share/mysql-${SLOT}"}
-	: ${MY_SYSCONFDIR="${EPREFIX}/etc/mysql-${SLOT}"}
-	: ${MY_LOCALSTATEDIR="${EPREFIX}/var/lib/mysql/${SLOT}"}
+	: ${MY_SYSCONFDIR="${EPREFIX}/etc/mysql"}
+	: ${MY_LOCALSTATEDIR="${EPREFIX}/var/lib/mysql"}
 	: ${MY_LOGDIR="${EPREFIX}/var/log/mysql"}
 	MY_DATADIR="${MY_LOCALSTATEDIR}"
 
@@ -209,8 +210,8 @@ src_prepare() {
 		echo > "${S}/support-files/SELinux/CMakeLists.txt" || die
 	fi
 
-	rm "${WORKDIR}"/mysql-patches/*-cmake-Fix-minimal-build.patch || die
-	rm "${WORKDIR}"/mysql-patches/*-cmake-build-without-client-libs-and-tools.patch || die
+	#rm "${WORKDIR}"/mysql-patches/*-cmake-Fix-minimal-build.patch || die
+	#rm "${WORKDIR}"/mysql-patches/*-cmake-build-without-client-libs-and-tools.patch || die
 
 	cmake_src_prepare
 }
@@ -235,7 +236,7 @@ src_configure() {
 		-DBUILD_SHARED_LIBS=OFF
 
 		-DMYSQL_DATADIR="${EPREFIX}/var/lib/mysql"
-		-DSYSCONFDIR="${EPREFIX}/etc/mysql-${SLOT}"
+		-DSYSCONFDIR="${EPREFIX}/etc/mysql"
 
 		-DINSTALL_BINDIR="$(get_libdir)/mysql-${SLOT}/bin"
 		-DINSTALL_DOCDIR="share/doc/${PF}"
@@ -246,7 +247,7 @@ src_configure() {
 		-DINSTALL_PRIV_LIBDIR="$(get_libdir)/mysql-${SLOT}/private"
 		-DINSTALL_MYSQLSHAREDIR="share/mysql-${SLOT}"
 		-DINSTALL_PLUGINDIR="$(get_libdir)/mysql-${SLOT}/plugin"
-		-DINSTALL_MYSQLDATADIR="${EPREFIX}/var/lib/mysql/${SLOT}"
+		-DINSTALL_MYSQLDATADIR="${EPREFIX}/var/lib/mysql"
 		-DINSTALL_SBINDIR="$(get_libdir)/mysql-${SLOT}/sbin"
 		-DINSTALL_SUPPORTFILESDIR="${EPREFIX}/usr/share/mysql-${SLOT}"
 
@@ -254,6 +255,9 @@ src_configure() {
 		-DROUTER_INSTALL_LIBDIR="$(get_libdir)/mysql-${SLOT}/mysqlrouter/private"
 		-DROUTER_INSTALL_LOGROTATEDIR="${EPREFIX}/etc/logrotate.d"
 		-DROUTER_INSTALL_DOCDIR="share/doc/${PF}"
+
+		 # These are installed via dev-db/mysql-connector-c
+		-DWITHOUT_CLIENTLIBS=YES
 
 		-DCOMPILATION_COMMENT="Gentoo Linux ${PF}"
 		-DWITH_UNIT_TESTS=$(usex test ON OFF)
@@ -417,8 +421,9 @@ src_test() {
 	sed \
 		-e "s/@GENTOO_PORTAGE_EPREFIX@/${EPREFIX}/" \
 		-e "s/@DATADIR@/${MY_DATADIR}/" \
-		"${FILESDIR}"/my.cnf-8.0.distro-client \
-		"${FILESDIR}"/my.cnf-8.0.distro-server \
+		-e "s/@SLOT@/${SLOT}/" \
+		"${FILESDIR}"/my.cnf-8.0.distro-client-r1 \
+		"${FILESDIR}"/my.cnf-8.0.distro-server-r1 \
 			> "${T}"/my.cnf || die
 	local -x PATH_CONFIG_FILE="${T}/my.cnf"
 
@@ -613,16 +618,17 @@ src_install() {
 	einfo "Building default configuration ..."
 	insinto "${MY_SYSCONFDIR#${EPREFIX}}"
 	[[ -f "${S}/scripts/mysqlaccess.conf" ]] && doins "${S}"/scripts/mysqlaccess.conf
-	cp "${FILESDIR}/my.cnf-5.7" "${TMPDIR}/my.cnf" || die
+	sed -e "s|@SLOT@|${SLOT}|" "${FILESDIR}/my.cnf-8.0" > "${TMPDIR}/my.cnf" || die
 	eprefixify "${TMPDIR}/my.cnf"
 	doins "${TMPDIR}/my.cnf"
 	insinto "${MY_SYSCONFDIR#${EPREFIX}}/mysql.d"
-	cp "${FILESDIR}/my.cnf-8.0.distro-client" "${TMPDIR}/50-distro-client.cnf" || die
+	sed -e "s|@SLOT@|${SLOT}|" "${FILESDIR}/my.cnf-8.0.distro-client-r1" > "${TMPDIR}/50-distro-client.cnf" || die
 	eprefixify "${TMPDIR}/50-distro-client.cnf"
 	doins "${TMPDIR}/50-distro-client.cnf"
 
-	mycnf_src="my.cnf-8.0.distro-server"
+	mycnf_src="my.cnf-8.0.distro-server-r1"
 	sed -e "s!@DATADIR@!${MY_DATADIR}!g" \
+		-e "s|@SLOT@|${SLOT}|" \
 		"${FILESDIR}/${mycnf_src}" \
 		> "${TMPDIR}/my.cnf.ok" || die
 
