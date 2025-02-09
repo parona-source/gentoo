@@ -1,0 +1,89 @@
+https://github.com/domdfcoding/singledispatch-json/issues/55
+https://github.com/domdfcoding/singledispatch-json/pull/56
+
+From 12ce9ebac2a330c37a1006c1b414d8575117a57c Mon Sep 17 00:00:00 2001
+From: Colin Watson <cjwatson@debian.org>
+Date: Wed, 13 Nov 2024 11:50:38 +0000
+Subject: [PATCH 1/2] Fix tests on Python 3.13
+
+The previously-expected messages and indexes were changed by
+https://github.com/python/cpython/pull/113227.
+
+Fixes: #55
+--- a/tests/stdlib_tests/test_fail.py
++++ b/tests/stdlib_tests/test_fail.py
+@@ -162,11 +162,19 @@ def test_truncated_input(data: str, msg: str, idx: int):
+ 				('{"spam":[}', unexpected_right_brace, 9),
+ 				("[42:", unexpected_colon, 3),
+ 				('[42 "spam"', "Unexpected '\"' when decoding array" if PYPY else "Expecting ',' delimiter", 4),
+-				("[42,]", "Unexpected ']'" if PYPY else "Expecting value", 4),
++				(
++						"[42,]",
++						"Unexpected ']'" if PYPY else "Illegal trailing comma before end of array" if sys.version_info >= (3, 13) else "Expecting value",
++						3 if sys.version_info >= (3, 13) else 4
++						),
+ 				('{"spam":[42}', "Unexpected '}' when decoding array" if PYPY else "Expecting ',' delimiter", 11),
+ 				('["]', "Unterminated string starting at", 1),
+ 				('["spam":', unexpected_colon, 7),
+-				('["spam",]', "Unexpected ']'" if PYPY else "Expecting value", 8),
++				(
++						'["spam",]',
++						"Unexpected ']'" if PYPY else "Illegal trailing comma before end of array" if sys.version_info >= (3, 13) else "Expecting value",
++						7 if sys.version_info >= (3, 13) else 8
++						),
+ 				("{:", property_name_string, 1),
+ 				("{,", property_name_string, 1),
+ 				("{42", property_name_string, 1),
+@@ -182,7 +190,11 @@ def test_truncated_input(data: str, msg: str, idx: int):
+ 						11
+ 						),
+ 				('[{"spam":42]', "Unexpected ']' when decoding object" if PYPY else "Expecting ',' delimiter", 11),
+-				('{"spam":42,}', property_name_string, 11),
++				(
++						'{"spam":42,}',
++						"Illegal trailing comma before end of object" if sys.version_info >= (3, 13) else property_name_string,
++						10 if sys.version_info >= (3, 13) else 11
++						),
+ 				]
+ 		)
+ def test_unexpected_data(data: str, msg: str, idx: int):
+
+From 8b573fbb195a2b84d9e1e3da697377cf63cc14c8 Mon Sep 17 00:00:00 2001
+From: "pre-commit-ci[bot]"
+ <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+Date: Wed, 13 Nov 2024 11:52:32 +0000
+Subject: [PATCH 2/2] [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+for more information, see https://pre-commit.ci
+--- a/tests/stdlib_tests/test_fail.py
++++ b/tests/stdlib_tests/test_fail.py
+@@ -164,7 +164,8 @@ def test_truncated_input(data: str, msg: str, idx: int):
+ 				('[42 "spam"', "Unexpected '\"' when decoding array" if PYPY else "Expecting ',' delimiter", 4),
+ 				(
+ 						"[42,]",
+-						"Unexpected ']'" if PYPY else "Illegal trailing comma before end of array" if sys.version_info >= (3, 13) else "Expecting value",
++						"Unexpected ']'" if PYPY else "Illegal trailing comma before end of array"
++						if sys.version_info >= (3, 13) else "Expecting value",
+ 						3 if sys.version_info >= (3, 13) else 4
+ 						),
+ 				('{"spam":[42}', "Unexpected '}' when decoding array" if PYPY else "Expecting ',' delimiter", 11),
+@@ -172,7 +173,8 @@ def test_truncated_input(data: str, msg: str, idx: int):
+ 				('["spam":', unexpected_colon, 7),
+ 				(
+ 						'["spam",]',
+-						"Unexpected ']'" if PYPY else "Illegal trailing comma before end of array" if sys.version_info >= (3, 13) else "Expecting value",
++						"Unexpected ']'" if PYPY else "Illegal trailing comma before end of array"
++						if sys.version_info >= (3, 13) else "Expecting value",
+ 						7 if sys.version_info >= (3, 13) else 8
+ 						),
+ 				("{:", property_name_string, 1),
+@@ -192,7 +194,8 @@ def test_truncated_input(data: str, msg: str, idx: int):
+ 				('[{"spam":42]', "Unexpected ']' when decoding object" if PYPY else "Expecting ',' delimiter", 11),
+ 				(
+ 						'{"spam":42,}',
+-						"Illegal trailing comma before end of object" if sys.version_info >= (3, 13) else property_name_string,
++						"Illegal trailing comma before end of object"
++						if sys.version_info >= (3, 13) else property_name_string,
+ 						10 if sys.version_info >= (3, 13) else 11
+ 						),
+ 				]
