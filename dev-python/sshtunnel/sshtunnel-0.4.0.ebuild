@@ -4,6 +4,7 @@
 EAPI=8
 
 DISTUTILS_USE_PEP517=setuptools
+EPYTEST_XDIST=1
 PYTHON_COMPAT=( python3_{10..12} )
 inherit distutils-r1 pypi
 
@@ -14,6 +15,18 @@ LICENSE="MIT"
 SLOT="0"
 KEYWORDS="amd64 ~arm ~arm64 x86"
 
-RESTRICT="test"
+RESTRICT="!test? ( test )"
 
 RDEPEND="dev-python/paramiko[${PYTHON_USEDEP}]"
+BDEPEND="
+	test? (
+		dev-python/paramiko[server(+),${PYTHON_USEDEP}]
+		dev-python/mock[${PYTHON_USEDEP}]
+	)
+"
+
+PATCHES=(
+	"${FILESDIR}"/sshtunnel-0.4.0-dont-deadlock-tests.patch
+)
+
+distutils_enable_tests pytest
