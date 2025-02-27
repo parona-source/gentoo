@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
-inherit cmake flag-o-matic
+inherit cmake flag-o-matic toolchain-funcs
 
 DESCRIPTION="GNUstep Objective-C runtime"
 HOMEPAGE="https://gnustep.github.io"
@@ -23,11 +23,14 @@ PATCHES=(
 )
 
 src_configure() {
-	export CC="clang"
-	export CXX="clang++"
+	if tc-is-gcc; then
+		einfo "Forcing clang"
+		export CC="${CHOST}-clang"
+		export CXX="${CHOST}-clang++"
 
-	# Strip unsupported flags for clang. bug #871933
-	strip-unsupported-flags
+		# Strip unsupported flags for clang. bug #871933
+		strip-unsupported-flags
+	fi
 
 	local mycmakeargs=(
 		-DGNUSTEP_CONFIG=GNUSTEP_CONFIG-NOTFOUND
