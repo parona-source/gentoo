@@ -69,11 +69,6 @@ pkg_setup() {
 			ewarn "# gnustep-updater -l"
 		fi
 	fi
-
-	if use libobjc2; then
-		export CC=clang
-		export CXX=clang++
-	fi
 }
 
 src_prepare() {
@@ -86,9 +81,15 @@ src_prepare() {
 }
 
 src_configure() {
-	# Strip unsupported flags for clang with USE="libobjc2"
-	# bug #949599
-	strip-unsupported-flags
+	if use libobjc2 && tc-is-gcc; then
+		einfo "Forcing clang"
+		export CC="${CHOST}-clang"
+		export CXX="${CHOST}-clang++"
+
+		# Strip unsupported flags for clang
+		# bug #949599
+		strip-unsupported-flags
+	fi
 
 	econf \
 		INSTALL="${EPREFIX}"/usr/bin/install \
