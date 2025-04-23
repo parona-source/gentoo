@@ -1,0 +1,26 @@
+diff --git a/meson_options.txt b/meson_options.txt
+index 27302d6..8b06950 100644
+--- a/meson_options.txt
++++ b/meson_options.txt
+@@ -3,6 +3,7 @@ option('rt_cap',                     type: 'feature', description: 'Support for
+ option('drm_backend',                type: 'feature', description: 'DRM Atomic Backend')
+ option('sdl2_backend',               type: 'feature', description: 'SDL2 Window Backend')
+ option('avif_screenshots',           type: 'feature', description: 'Support for saving .AVIF HDR screenshots')
++option('systemd',                    type: 'feature', description: 'Systemd support')
+ option('input_emulation' ,           type: 'feature', description: 'Support for XTest/Input Emulation with libei')
+ option('enable_gamescope',           type : 'boolean', value : true, description: 'Build Gamescope executable')
+ option('enable_gamescope_wsi_layer', type : 'boolean', value : true, description: 'Build Gamescope layer')
+diff --git a/src/meson.build b/src/meson.build
+index a3dfdab..2e703c6 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -13,7 +13,7 @@ dep_xi = dependency('xi')
+ drm_dep = dependency('libdrm', version: '>= 2.4.113', required: get_option('drm_backend'))
+ eis_dep = dependency('libeis-1.0', required : get_option('input_emulation'))
+ 
+-libsystemd_dep = dependency('libsystemd', required : false)
++libsystemd_dep = dependency('libsystemd', required : get_option('systemd'))
+ 
+ wayland_server = dependency('wayland-server', version: '>=1.21')
+ wayland_protos = dependency('wayland-protocols', version: '>=1.17')
+
