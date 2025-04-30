@@ -219,5 +219,7 @@ src_test() {
 	use opengl && use X && KERNELS+=( XFB )
 	use opengl && KERNELS+=( GLSL )
 
-	virtx "${BUILD_DIR}/bin/glImaging" -w test -l 3 -s 256 256 -a -k "$(IFS=","; echo "${KERNELS[*]}")"
+	if use examples && use opengl && use glfw; then
+		virtx "${BUILD_DIR}/bin/glImaging" -w test -l 3 -s 256 256 -a -k "$(IFS=","; echo "${KERNELS[*]}")"
+	fi
 }
