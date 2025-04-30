@@ -200,6 +200,10 @@ src_test() {
 	CMAKE_SKIP_TESTS=(
 		# Fails due to for CL & CUDA kernels, works outside
 		"glImaging"
+		# GLFW reported error 65544: Wayland: Failed to connect to display
+		# DISPLAY set to ':2'
+		# Failed to initialize GLFW
+		"osd_regression"
 	)
 
 	# "far_tutorial_1_2 breaks with gcc and > -O1"
