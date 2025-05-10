@@ -18,6 +18,12 @@
 #--- END OF EXAMPLES ---
 
 # Alfred Wingate <parona@protonmail.com> (2025-10-05)
+# dev-libs/gdl was archived after GNOME had no revdeps themselves
+# https://gitlab.gnome.org/Archive/gdl/-/issues/10
+# https://gitlab.gnome.org/Infrastructure/Infrastructure/-/issues/1830
+dev-libs/gdl
+
+# Alfred Wingate <parona@protonmail.com> (2025-10-05)
 # dev-util/anjuta was effectively replaced by dev-util/gnome-builder
 # https://gitlab.gnome.org/Infrastructure/Infrastructure/-/issues/826
 # https://marc.info/?l=openbsd-ports-cvs&m=149245186807681&w=2
