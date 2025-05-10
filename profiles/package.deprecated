@@ -18,6 +18,10 @@
 #--- END OF EXAMPLES ---
 
 # Alfred Wingate <parona@protonmail.com> (2025-10-05)
+# https://gitlab.gnome.org/Infrastructure/Infrastructure/-/issues/575
+x11-misc/notification-daemon
+
+# Alfred Wingate <parona@protonmail.com> (2025-10-05)
 # https://gitlab.gnome.org/Infrastructure/Infrastructure/-/issues/681
 media-video/snappy
 
