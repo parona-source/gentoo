@@ -6,6 +6,6 @@
     <name>Gentoo GNOME Desktop</name>
   </maintainer>
   <upstream>
-    <remote-id type="gnome-gitlab">GNOME/gdl</remote-id>
+    <remote-id type="gnome-gitlab">Archive/gdl</remote-id>
   </upstream>
 </pkgmetadata>
