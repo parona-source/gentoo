@@ -17,6 +17,12 @@
 
 #--- END OF EXAMPLES ---
 
+# Alfred Wingate <parona@protonmail.com> (2025-10-05)
+# dev-util/anjuta was effectively replaced by dev-util/gnome-builder
+# https://gitlab.gnome.org/Infrastructure/Infrastructure/-/issues/826
+# https://marc.info/?l=openbsd-ports-cvs&m=149245186807681&w=2
+dev-util/anjuta
+
 # Michał Górny <mgorny@gentoo.org> (2024-06-15)
 # Stop-gap compatibility package.  Upstreams really need to move away
 # from the removed cgi module rather than rely on this.
