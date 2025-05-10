@@ -18,6 +18,11 @@
 #--- END OF EXAMPLES ---
 
 # Alfred Wingate <parona@protonmail.com> (2025-10-05)
+# Removed from GNOME core applications, unmaintained and archived.
+# https://gitlab.gnome.org/Infrastructure/Infrastructure/-/issues/1920
+media-gfx/gnome-photos
+
+# Alfred Wingate <parona@protonmail.com> (2025-10-05)
 # dev-libs/gdl was archived after GNOME had no revdeps themselves
 # https://gitlab.gnome.org/Archive/gdl/-/issues/10
 # https://gitlab.gnome.org/Infrastructure/Infrastructure/-/issues/1830
