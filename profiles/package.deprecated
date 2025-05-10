@@ -18,6 +18,11 @@
 #--- END OF EXAMPLES ---
 
 # Alfred Wingate <parona@protonmail.com> (2025-10-05)
+# https://gitlab.gnome.org/Archive/goocanvas/-/issues/34
+# https://gitlab.gnome.org/Infrastructure/Infrastructure/-/issues/1319
+x11-libs/goocanvas
+
+# Alfred Wingate <parona@protonmail.com> (2025-10-05)
 # https://gitlab.gnome.org/Infrastructure/Infrastructure/-/issues/1818
 dev-util/glade
 
