@@ -18,6 +18,14 @@
 #--- END OF EXAMPLES ---
 
 # Alfred Wingate <parona@protonmail.com> (2025-10-05)
+# GNOME packages that were archived.
+# https://gitlab.gnome.org/Infrastructure/Infrastructure/-/issues/1831
+dev-perl/Gtk2
+gnome-base/gnome-common
+gnome-base/libgnomekbd
+net-libs/libgrss
+
+# Alfred Wingate <parona@protonmail.com> (2025-10-05)
 # Removed from GNOME core applications, unmaintained and archived.
 # https://gitlab.gnome.org/Infrastructure/Infrastructure/-/issues/1920
 media-gfx/gnome-photos
