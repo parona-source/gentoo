@@ -6,7 +6,7 @@ inherit flag-o-matic pam systemd toolchain-funcs
 
 MY_PV="${PV/_pre/-}"
 MY_SRC="${PN}-${MY_PV}"
-MY_URI="http://ftp.porcupine.org/mirrors/postfix-release/experimental"
+MY_URI="http://ftp.porcupine.org/mirrors/postfix-release/official"
 RC_VER="2.7"
 
 DESCRIPTION="A fast and secure drop-in replacement for sendmail"
@@ -18,7 +18,7 @@ LICENSE="|| ( IBM EPL-2.0 )"
 SLOT="0"
 KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
 
-IUSE="+berkdb cdb dovecot-sasl +eai ldap ldap-bind lmdb mbox memcached mongodb mysql nis pam postgres sasl selinux sqlite ssl tlsrpt"
+IUSE="+berkdb cdb dovecot-sasl +eai ldap ldap-bind lmdb mbox memcached mongodb mysql nis pam postgres sasl selinux sqlite ssl"
 
 DEPEND="
 	acct-group/postfix
@@ -32,7 +32,13 @@ DEPEND="
 	ldap? ( net-nds/openldap:= )
 	ldap-bind? ( net-nds/openldap:=[sasl] )
 	lmdb? ( >=dev-db/lmdb-0.9.11:= )
-	mongodb? ( >=dev-libs/mongo-c-driver-1.23.0 >=dev-libs/libbson-1.23.0 )
+	mongodb? (
+		>=dev-libs/mongo-c-driver-1.23.0
+		|| (
+			>=dev-libs/mongo-c-driver-2
+			>=dev-libs/libbson-1.23.0
+		)
+	)
 	mysql? ( dev-db/mysql-connector-c:0= )
 	nis? ( net-libs/libnsl:= )
 	pam? ( sys-libs/pam )
@@ -40,7 +46,6 @@ DEPEND="
 	sasl? (  >=dev-libs/cyrus-sasl-2 )
 	sqlite? ( dev-db/sqlite:3 )
 	ssl? ( >=dev-libs/openssl-1.1.1:0= )
-	tlsrpt? ( net-libs/libtlsrpt )
 	"
 
 RDEPEND="${DEPEND}
@@ -57,10 +62,16 @@ RDEPEND="${DEPEND}
 	!mail-mta/ssmtp[mta]
 	selinux? ( sec-policy/selinux-postfix )"
 
+# require at least one db implementation for newalias (and postmap)
+# command to function properly
 REQUIRED_USE="
+	|| ( berkdb cdb lmdb )
 	ldap-bind? ( ldap sasl )
-	tlsrpt? ( ssl )
 	"
+
+PATCHES=(
+	"${FILESDIR}/openssl-compatibility-warning.patch"
+)
 
 src_prepare() {
 	default
@@ -77,7 +88,7 @@ src_configure() {
 	# https://marc.info/?l=postfix-users&m=173542420611213&w=2 (bug #945733)
 	append-cflags -std=gnu17
 
-	for name in CDB LDAP LMDB MONGODB MYSQL PCRE PGSQL SDBM SQLITE TLSRPT
+	for name in CDB LDAP LMDB MONGODB MYSQL PCRE PGSQL SDBM SQLITE
 	do
 		local AUXLIBS_${name}=""
 	done
@@ -128,11 +139,6 @@ src_configure() {
 	if use sqlite; then
 		mycc="${mycc} -DHAS_SQLITE"
 		AUXLIBS_SQLITE="-lsqlite3 -lpthread"
-	fi
-
-	if use tlsrpt; then
-		mycc="${mycc} -DUSE_TLSRPT"
-		AUXLIBS_TLSRPT="-ltlsrpt"
 	fi
 
 	if use sasl; then
@@ -188,7 +194,7 @@ src_configure() {
 		CC="$(tc-getCC)" \
 		OPT="${CFLAGS}" \
 		CCARGS="${mycc}" \
-		AUXLIBS="${mylibs} ${AUXLIBS_TLSRPT}" \
+		AUXLIBS="${mylibs}" \
 		AUXLIBS_CDB="${AUXLIBS_CDB}" \
 		AUXLIBS_LDAP="${AUXLIBS_LDAP}" \
 		AUXLIBS_LMDB="${AUXLIBS_LMDB}" \
@@ -286,27 +292,20 @@ src_install() {
 }
 
 pkg_postinst() {
-	if ! use berkdb && ! use cdb && ! use lmdb; then
+	# warn if no aliases database
+	# do not assume berkdb
+	if [[ ! -e /etc/mail/aliases.db \
+	   && ! -e /etc/mail/aliases.cdb \
+	   && ! -e /etc/mail/aliases.lmdb ]] ; then
 		ewarn
-		ewarn "No backend for local database files is configured."
-		ewarn "newaliases and postmap commands will not work. This"
-		ewarn "is not a supported configuration and you are strongly"
-		ewarn "recommended to turn one of berkdb, cdb or lmdb USE flags"
-		ewarn "on."
+		ewarn "You must edit /etc/mail/aliases to suit your needs"
+		ewarn "and then run /usr/bin/newaliases. Postfix will not"
+		ewarn "work correctly without it."
 		ewarn
-	else
-		# warn if no aliases database
-		# do not assume berkdb
-		if [[ ! -e /etc/mail/aliases.db \
-		   && ! -e /etc/mail/aliases.cdb \
-		   && ! -e /etc/mail/aliases.lmdb ]] ; then
-			ewarn "You must edit /etc/mail/aliases to suit your needs"
-			ewarn "and then run /usr/bin/newaliases."
-		fi
-		# run newaliases anyway. otherwise, we might break when switching
-		# default database implementation
-		"${EROOT}"/usr/bin/newaliases
 	fi
+	# run newaliases anyway. otherwise, we might break when switching
+	# default database implementation - from berkdb to cdb for example
+	"${EROOT}"/usr/bin/newaliases
 
 	# check and fix file permissions
 	"${EROOT}"/usr/sbin/postfix set-permissions
