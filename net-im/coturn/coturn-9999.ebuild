@@ -1,4 +1,4 @@
-# Copyright 1999-2024 Gentoo Authors
+# Copyright 1999-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -24,7 +24,10 @@ DEPEND="
 	>dev-libs/libevent-2.1.8:=[ssl]
 	dev-libs/openssl:=
 	mongodb? (
-		dev-libs/libbson
+		|| (
+			>=dev-libs/mongo-c-driver-2
+			dev-libs/libbson
+		)
 		dev-libs/mongo-c-driver
 	)
 	mysql? ( dev-db/mysql-connector-c:= )
