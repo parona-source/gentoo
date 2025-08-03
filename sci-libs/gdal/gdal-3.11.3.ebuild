@@ -122,6 +122,7 @@ BDEPEND="
 				  >=dev-python/pytest-6.0.0[${PYTHON_USEDEP}]
 				  dev-python/pytest-env[${PYTHON_USEDEP}]
 				  dev-python/pytest-rerunfailures[${PYTHON_USEDEP}]
+				  dev-python/pytest-xdist[${PYTHON_USEDEP}]
 				  parquet? ( dev-python/pyarrow[parquet,${PYTHON_USEDEP}] )
 			)
 		')
