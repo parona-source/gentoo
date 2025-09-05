@@ -288,6 +288,7 @@ dev-db/mongodb-compass-bin
 dev-db/ocp
 dev-db/oracle-instantclient
 dev-db/sqlcl-bin
+dev-build/bazel-bin
 dev-games/ps2-packer
 dev-java/openjdk-bin
 dev-java/openjdk-jre-bin
