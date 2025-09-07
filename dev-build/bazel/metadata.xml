@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>parona@protonmail.com</email>
+		<name>Alfred Wingate</name>
+	</maintainer>
+	<use>
+		<flag name="force-lld">Force building with lld</flag>
+		<flag name="system-bootstrap">Bootstrap using installed bazel</flag>
+	</use>
+	<upstream>
+		<remote-id type="github">bazelbuild/bazel</remote-id>
+	</upstream>
+</pkgmetadata>

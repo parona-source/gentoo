@@ -1,0 +1,32 @@
+diff --git a/scripts/BUILD b/scripts/BUILD
+index 2d479f531f..08ca2de053 100644
+--- a/scripts/BUILD
++++ b/scripts/BUILD
+@@ -9,9 +9,9 @@ genrule(
+     cmd = """
+     TMPDIR=$$(mktemp -d)
+     trap 'rm -rf $$TMPDIR' EXIT
+-    $(location //src:bazel) --batch --output_user_root=$$TMPDIR help completion bash > $@
++    $(location //src:bazel_nojdk) --batch --output_user_root=$$TMPDIR help completion bash > $@
+     """,
+-    tools = ["//src:bazel"],
++    tools = ["//src:bazel_nojdk"],
+     visibility = [
+         "//scripts/packages:__subpackages__",
+         "//src/test/py/bazel:__pkg__",
+@@ -95,12 +95,12 @@ genrule(
+     outs = ["bazel.fish"],
+     cmd = " ".join([
+         "$(location :generate_fish_completion)",
+-        "--bazel=$(location //src:bazel)",
++        "--bazel=$(location //src:bazel_nojdk)",
+         "--output=$@",
+     ]),
+     tools = [
+         ":generate_fish_completion",
+-        "//src:bazel",
++        "//src:bazel_nojdk",
+     ],
+     visibility = ["//scripts/packages:__subpackages__"],
+ )
+
