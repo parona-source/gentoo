@@ -3,79 +3,26 @@
 
 EAPI=8
 
+BAZEL_COMPAT=8
 PYTHON_COMPAT=( python3_{11..14} )
-inherit desktop dot-a edo elisp-common multiprocessing python-any-r1 savedconfig toolchain-funcs xdg
+inherit bazel desktop dot-a edo elisp-common python-any-r1 savedconfig toolchain-funcs xdg
 
-# USE_BAZEL_VERSION in .bazeliskrc
-BAZEL_VER="8.1.1"
-# 2025-06-03, date of release of mozc
-BAZEL_BCR_HASH="b553f46a71d17fe8f32661f64e755cf6fac03ada"
 # commit: Merge "Update BUILD_OSS to 5851"
 MOZC_FCITX_HASH="f16444e45bd3c7f7a0af718f4af86ad181b6dd8b"
 
-# submodules, but archives are fetched by bazel from bazel_dist
-ABS_VER="20250127.0"
-GTEST_VER="1.15.2"
-JUD_VER="2025-01-25"
-PROTO_VER="29.3"
-
-# to simplify update
-CPYTHON_VER="3.11.10+20241016"
-
 DESCRIPTION="Mozc - Japanese input method editor."
 HOMEPAGE="https://github.com/google/mozc"
-# for new release, update versions according to MODULE.bazel or failures of the fetch's phase of bazel
 SRC_URI="
-	amd64? (
-		https://releases.bazel.build/${BAZEL_VER}/release/bazel-${BAZEL_VER}-linux-x86_64
-		https://github.com/astral-sh/python-build-standalone/releases/download/${CPYTHON_VER#*+}/cpython-${CPYTHON_VER}-x86_64-unknown-linux-gnu-install_only.tar.gz
+	!fcitx5? (
+		https://github.com/google/mozc/archive/refs/tags/${PV}.tar.gz
+			-> ${P}.tar.gz
+		${P}-vendor.tar.xz
 	)
-	arm64? (
-		https://releases.bazel.build/${BAZEL_VER}/release/bazel-${BAZEL_VER}-linux-arm64
-		https://github.com/astral-sh/python-build-standalone/releases/download/${CPYTHON_VER#*+}/cpython-${CPYTHON_VER}-aarch64-unknown-linux-gnu-install_only.tar.gz
+	fcitx5? (
+		https://github.com/fcitx/mozc/archive/${MOZC_FCITX_HASH}.tar.gz
+			-> ${PN}-fcitx5-${PV}.tar.gz
+		${PN}-fcitx5-${PV}-vendor.tar.xz
 	)
-	!fcitx5? ( https://github.com/google/${PN}/archive/refs/tags/${PV}.tar.gz
-		-> ${P}.tar.gz )
-	fcitx5? ( https://github.com/fcitx/${PN}/archive/${MOZC_FCITX_HASH}.tar.gz
-		-> ${PN}-fcitx5-${PV}.tar.gz )
-	test? ( https://github.com/google/googletest/releases/download/v${GTEST_VER}/googletest-${GTEST_VER}.tar.gz )
-	https://github.com/bazelbuild/bazel-central-registry/archive/${BAZEL_BCR_HASH}.tar.gz
-		-> ${PN}-bcr-${BAZEL_BCR_HASH}.tar.gz
-	https://github.com/abseil/abseil-cpp/releases/download/${ABS_VER}/abseil-cpp-${ABS_VER}.tar.gz
-	https://github.com/hiroyuki-komatsu/japanese-usage-dictionary/archive/${JUD_VER}.zip
-		-> japanese-usage-dictionary-${JUD_VER}.zip
-	https://github.com/protocolbuffers/protobuf/releases/download/v${PROTO_VER}/protobuf-${PROTO_VER}.zip
-	https://github.com/bazelbuild/apple_support/releases/download/1.16.0/apple_support.1.16.0.tar.gz
-	https://github.com/bazel-contrib/bazel_features/releases/download/v1.21.0/bazel_features-v1.21.0.tar.gz
-	https://github.com/bazelbuild/bazel-skylib/releases/download/1.7.1/bazel-skylib-1.7.1.tar.gz
-	https://github.com/bazelbuild/platforms/releases/download/0.0.10/platforms-0.0.10.tar.gz
-	https://github.com/bazelbuild/rules_android_ndk/releases/download/v0.1.3/rules_android_ndk-v0.1.3.tar.gz
-	https://github.com/bazelbuild/rules_apple/releases/download/3.16.1/rules_apple.3.16.1.tar.gz
-	https://github.com/bazelbuild/rules_cc/releases/download/0.0.17/rules_cc-0.0.17.tar.gz
-	https://github.com/bazelbuild/rules_java/releases/download/8.6.1/rules_java-8.6.1.tar.gz
-	https://github.com/bazelbuild/rules_kotlin/releases/download/v1.9.6/rules_kotlin-v1.9.6.tar.gz
-	https://github.com/bazelbuild/rules_license/releases/download/1.0.0/rules_license-1.0.0.tar.gz
-	https://github.com/bazelbuild/rules_pkg/releases/download/1.0.1/rules_pkg-1.0.1.tar.gz
-	https://github.com/bazel-contrib/rules_python/releases/download/1.0.0/rules_python-1.0.0.tar.gz
-	https://github.com/bazelbuild/rules_shell/releases/download/v0.2.0/rules_shell-v0.2.0.tar.gz
-	https://github.com/bazelbuild/rules_swift/releases/download/2.1.1/rules_swift.2.1.1.tar.gz
-	https://github.com/madler/zlib/releases/download/v1.3.1/zlib-1.3.1.tar.gz
-	https://github.com/hiroyuki-komatsu/japanpost_zipcode/raw/6ece210081fb73d0ea4a5ea8e13ac9584d03fd76/ken_all.zip
-		-> ${P}-ken_all.zip
-	https://github.com/hiroyuki-komatsu/japanpost_zipcode/raw/6ece210081fb73d0ea4a5ea8e13ac9584d03fd76/jigyosyo.zip
-		-> ${P}-jigyosyo.zip
-	https://raw.githubusercontent.com/google/material-design-icons/4.0.0/png/action/chrome_reader_mode/materialiconsoutlined/48dp/1x/outline_chrome_reader_mode_black_48dp.png
-		-> ${P}-dictionary.png
-	https://raw.githubusercontent.com/google/material-design-icons/4.0.0/src/action/chrome_reader_mode/materialiconsoutlined/24px.svg
-		-> ${P}-dictionary.svg
-	https://raw.githubusercontent.com/google/material-design-icons/4.0.0/png/action/settings/materialiconsround/48dp/1x/round_settings_black_48dp.png
-		-> ${P}-properties.png
-	https://raw.githubusercontent.com/google/material-design-icons/4.0.0/src/action/settings/materialiconsround/24px.svg
-		-> ${P}-properties.svg
-	https://raw.githubusercontent.com/google/material-design-icons/4.0.0/png/action/build/materialicons/48dp/1x/baseline_build_black_48dp.png
-		-> ${P}-tool.png
-	https://raw.githubusercontent.com/google/material-design-icons/4.0.0/src/action/build/materialicons/24px.svg
-		-> ${P}-tool.svg
 "
 S="${WORKDIR}/${P}/src"
 
@@ -85,10 +32,9 @@ S="${WORKDIR}/${P}/src"
 # japanese-usage-dictionary: BSD-2
 LICENSE="BSD BSD-2 ipadic public-domain unicode"
 SLOT="0"
-KEYWORDS="~amd64 ~arm64"
-IUSE="debug emacs fcitx5 +gui ibus renderer test"
+KEYWORDS="~amd64"
+IUSE="debug emacs fcitx5 +gui ibus renderer"
 REQUIRED_USE="|| ( emacs fcitx5 ibus )"
-RESTRICT="!test? ( test )"
 
 DEPEND="
 	fcitx5? ( app-i18n/fcitx:5 )
@@ -112,47 +58,23 @@ BDEPEND="
 SITEFILE="50${PN}-gentoo.el"
 
 PATCHES=(
-	"${FILESDIR}"/${PN}-2.31.5851.102-patch_rules_python.patch
 	"${FILESDIR}"/${PN}-2.31.5851.102-fix_path.patch
 )
 
 pkg_setup() {
 	python-any-r1_pkg_setup
+	bazel_pkg_setup
 }
 
 src_unpack() {
-	case $(tc-arch) in
-		amd64)		export EARCH=x86_64 ;;
-		arm64)		export EARCH=arm64 ;;
-		*)			die "architecture not supported: $(tc-arch)" ;;
-	esac
-	cp "${DISTDIR}"/bazel-${BAZEL_VER}-linux-${EARCH} bazel || die
-	chmod +x bazel || die
-
-	unpack ${PN}-bcr-${BAZEL_BCR_HASH}.tar.gz
-	ln -sfT bazel-central-registry-${BAZEL_BCR_HASH} bcr || die
-
-	# create symlinks for distdir with the name wanted by bazel
-	mkdir bazel_dist || die
-	pushd "${DISTDIR}" || die
-	for dep in *.{tar.gz,zip,png,svg}; do
-		ln -sfT "${DISTDIR}/${dep}" "${WORKDIR}/bazel_dist/${dep#${P}-}" || die
-	done
-	ln -sfT "${DISTDIR}"/japanese-usage-dictionary-${JUD_VER}.zip "${WORKDIR}"/bazel_dist/${JUD_VER}.zip  || die
-	popd || die
-
 	if use fcitx5; then
 		unpack ${PN}-fcitx5-${PV}.tar.gz
 		ln -sfT "${WORKDIR}"/${PN}-${MOZC_FCITX_HASH} "${WORKDIR}"/${P} || die
+		unpack ${PN}-fcitx5-${PV}-vendor.tar.xz
 	else
 		unpack ${P}.tar.gz
+		unpack ${P}-vendor.tar.xz
 	fi
-}
-
-ebazel() {
-	debug-print-function ${FUNCNAME} "${@}"
-
-	edo "${WORKDIR}"/bazel "$@"
 }
 
 mozc_icons() {
@@ -163,12 +85,6 @@ mozc_icons() {
 
 src_prepare() {
 	default
-
-	# patch applied by bazel with MODULE.bazel patched
-	cp "${FILESDIR}"/${PN}-2.31.5851.102-bazel_patch-fix_shebang.patch bazel/rules_python_fix_shebang.patch || die
-	# fix shebang
-	sed -e "s:@PYTHON@:${PYTHON}:" \
-		-i bazel/rules_python_fix_shebang.patch || die
 
 	# fix paths to preserve compatibility
 	sed -e "/LINUX_MOZC_SERVER_DIR/s:=.*:= \"/usr/libexec/mozc\":" \
@@ -225,67 +141,20 @@ src_configure() {
 	# to investigate, but there's lot of static libs
 	lto-guarantee-fat
 
-	# https://bazel.build/reference/be/make-variables
-	tc-export CC AR
-
-	MYEBAZELARGS=(
-		--compilation_mode="$(usex debug dbg opt)"
-		--config="oss_linux"
-		--distdir="${WORKDIR}/bazel_dist"
-		--jobs="$(get_makeopts_jobs)"
-		--registry="file://${WORKDIR}/bcr"
-		--repository_cache="${WORKDIR}/bazel_cache"
-		--spawn_strategy="local" # portage is already sandboxed
-		--strip="$(usex debug never always)"
-		--subcommands # be verbose
-		--verbose_failures
-	)
+	BAZEL_BUILD_TARGETS=( package )
+	BAZEL_BUILD_ARGS=( --config="oss_linux" )
 
 	if use fcitx5; then
-		MYEBAZELARGS+=(
-			unix/fcitx5/fcitx5-mozc.so
-			# just to be sure, use_server is enabled by default
-			--define server=1
-		)
+		BAZEL_BUILD_TARGETS+=( unix/fcitx5/fcitx5-mozc.so )
+		# just to be sure, use_server is enabled by default
+		BAZEL_BUILD_ARGS+=( --define server=1 )
 	fi
 
-	# add all targets/testsuites by default, then filter
-	if use test; then
-		MYEBAZELARGS+=( /... )
-		# not unix, no testsuite
-		SKIP_TESTS=( -protocol/... )
-		! use emacs && SKIP_TESTS+=( -unix/emacs/... )
-		! use gui && SKIP_TESTS+=( -gui/... )
-		! use ibus && SKIP_TESTS+=( -unix/ibus/... )
-		! use renderer && SKIP_TESTS+=( -renderer/... )
-		use fcitx5 && SKIP_TESTS+=( -unix/fcitx/... )
-	fi
-
-	local cflags
-	for cflags in ${CFLAGS}; do
-		MYEBAZELARGS+=( --conlyopt="${cflags}" )
-	done
-
-	local cxxflags
-	for cxxflags in ${CXXFLAGS}; do
-		MYEBAZELARGS+=( --cxxopt="${cxxflags}" )
-	done
-
-	local ldflags
-	for ldflags in ${LDFLAGS}; do
-		MYEBAZELARGS+=( --linkopt="${ldflags}" )
-	done
-
-	# clean cache, just in case
-	ebazel clean --expunge
-
-	# this build --nobuild generates bazel_cache
-	# this is useful to debug or make patch
-	ebazel build --nobuild package "${MYEBAZELARGS[@]}" -- "${SKIP_TESTS[@]}"
+	bazel_src_configure
 }
 
 src_compile() {
-	ebazel build package "${MYEBAZELARGS[@]}" -- "${SKIP_TESTS[@]}"
+	bazel_src_compile
 
 	# bazel-bin is a symlink, copy files to avoid problem with symlink then
 	cp -R bazel-bin/unix out_linux || die
@@ -294,7 +163,16 @@ src_compile() {
 }
 
 src_test() {
-	ebazel test --build_tests_only "${MYEBAZELARGS[@]}" -- "${SKIP_TESTS[@]}"
+	BAZEL_TEST_TARGETS=( /... )
+	BAZEL_SKIP_TESTS=(
+		-protocol/... # not unix, no testsuite
+		$(usev !emacs -unix/emacs/...)
+		$(usev !gui -gui/...)
+		$(usev !ibus -unix/ibus/...)
+		$(usev !renderer -renderer/...)
+		$(usev fcitx5 -unix/fcitx/...)
+	)
+	bazel_src_test
 }
 
 src_install() {
