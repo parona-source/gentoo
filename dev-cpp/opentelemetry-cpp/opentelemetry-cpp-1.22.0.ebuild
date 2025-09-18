@@ -116,5 +116,5 @@ src_test() {
 	)
 
 	# curl tests fragile
-	cmake_skip_test -j1
+	cmake_src_test -j1
 }
