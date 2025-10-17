@@ -1,0 +1,23 @@
+https://github.com/tinyalsa/tinyalsa/issues/215
+https://github.com/tinyalsa/tinyalsa/pull/216
+https://github.com/tinyalsa/tinyalsa/commit/9109c94f269102785c606bd6c211b52fbbcd822d
+
+From 4a2f0334e4790f6ba7eb6cfdd8179e7307f4119d Mon Sep 17 00:00:00 2001
+From: tinywrkb <tinywrkb@gmail.com>
+Date: Mon, 26 Jul 2021 19:09:26 +0300
+Subject: [PATCH] meson: add attributes.h and plugin.h public headers
+
+--- a/include/tinyalsa/meson.build
++++ b/include/tinyalsa/meson.build
+@@ -1,9 +1,11 @@
+ tinyalsa_headers = [
+   'asoundlib.h',
++  'attributes.h',
+   'interval.h',
+   'limits.h',
+   'mixer.h',
+   'pcm.h',
++  'plugin.h',
+   'version.h'
+ ]
+ 
