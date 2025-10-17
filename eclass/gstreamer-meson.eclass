@@ -71,6 +71,11 @@ case ${GST_PLUGINS_MULTILIB} in
 		;;
 esac
 
+# Bump based on upstream release notes
+if [[ ${PV} =~ 1.26.* ]]; then
+	BDEPEND=">=dev-build/meson-1.4"
+fi
+
 # @ECLASS_VARIABLE: GST_PLUGINS_ENABLED
 # @DESCRIPTION:
 # Defines the plugins to be built.
