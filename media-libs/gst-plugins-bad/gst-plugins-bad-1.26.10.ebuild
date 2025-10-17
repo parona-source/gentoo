@@ -31,7 +31,7 @@ RDEPEND="
 		>=dev-libs/wayland-protocols-1.26
 	)
 
-	orc? ( >=dev-lang/orc-0.4.33[${MULTILIB_USEDEP}] )
+	orc? ( >=dev-lang/orc-0.4.41[${MULTILIB_USEDEP}] )
 
 	vaapi? (
 		>=media-libs/libva-1.15:=[${MULTILIB_USEDEP}]
