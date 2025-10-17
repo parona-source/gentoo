@@ -6,6 +6,10 @@
 
 # New entries go on top.
 
+# Alfred Wingate <parona@protonmail.com> (2026-01-14)
+# Only keyworded on amd64
+media-libs/gst-plugins-bad alsa
+
 # Eli Schwartz <eschwartz@gentoo.org> (2026-01-09)
 # tests fail to build during src_compile:
 # - needs demos to be built
