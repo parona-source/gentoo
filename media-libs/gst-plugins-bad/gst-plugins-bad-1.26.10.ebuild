@@ -47,12 +47,6 @@ BDEPEND="
 
 DOCS=( AUTHORS ChangeLog NEWS README.md RELEASE )
 
-PATCHES=(
-	"${FILESDIR}"/0001-analyticsoverlay-move-option-to-right-section.patch
-	"${FILESDIR}"/0002-codec2json-move-option-to-right-section.patch
-	"${FILESDIR}"/gst-plugins-bad-1.24.13-va-skip-codecs-with-bad-resolution.patch
-)
-
 src_prepare() {
 	default
 	addpredict /dev # Prevent sandbox violations bug #570624
