@@ -179,14 +179,15 @@ src_prepare() {
 	default
 
 	strip-flags
-	filter-flags -Werror=lto-type-mismatch  # Not implemented by Clang, bug 946334
-	filter-flags -Wlto-type-mismatch
 	filter-lto
 
 	local llvm_prefix="$(get_llvm_prefix -b)"
 	export CC="${llvm_prefix}/bin/clang-${LLVM_SLOT}"
 	export CXX="${llvm_prefix}/bin/clang++-${LLVM_SLOT}"
 	export LD="${llvm_prefix}/bin/lld"
+
+	# Strip flags not implemented by Clang, bug #946334
+	strip-unsupported-flags
 
 	unset DOTNET_ROOT
 	unset NUGET_PACKAGES
