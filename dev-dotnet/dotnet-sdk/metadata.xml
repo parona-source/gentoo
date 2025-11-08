@@ -12,4 +12,8 @@
     <remote-id type="github">dotnet/installer</remote-id>
     <remote-id type="github">dotnet/sdk</remote-id>
   </upstream>
+  <use>
+   <!-- https://github.com/dotnet/runtime/issues/104796 -->
+    <flag name="llvm-libunwind">Use vendored llvm-libunwind instead of <pkg>sys-libs/libunwind</pkg></flag>
+  </use>
 </pkgmetadata>

@@ -47,6 +47,10 @@ LICENSE="MIT"
 SLOT="${SDK_SLOT}/${RUNTIME_SLOT}"
 KEYWORDS="~amd64"
 
+# llvm-libunwind vendored currently
+# https://github.com/dotnet/runtime/issues/104796
+IUSE="llvm-libunwind"
+
 # STRIP="llvm-strip" corrupts some executables when using the patchelf hack.
 # Be safe and restrict it for source-built too, bug https://bugs.gentoo.org/923430
 RESTRICT="splitdebug strip"
@@ -73,8 +77,8 @@ RDEPEND="
 	dev-libs/openssl:=
 	dev-libs/rapidjson
 	dev-util/lttng-ust:=
-	sys-libs/libunwind
 	virtual/zlib:0/1
+	!llvm-libunwind? ( sys-libs/libunwind )
 "
 DEPEND="
 	${RDEPEND}
@@ -261,7 +265,7 @@ src_compile() {
 		# How it should be built.
 		--source-build
 		--clean-while-building
-		--with-system-libs "+brotli+icu+libunwind+rapidjson+zlib+"
+		--with-system-libs "+brotli+icu$(usev !llvm-libunwind +libunwind)+rapidjson+zlib+"
 		--configuration "Release"
 
 		# Auxiliary options.
