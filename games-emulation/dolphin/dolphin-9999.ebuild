@@ -67,6 +67,7 @@ RDEPEND="
 	>=app-arch/lz4-1.8:=
 	app-arch/xz-utils
 	>=app-arch/zstd-1.4.0:=
+	dev-cpp/cpp-ipc
 	dev-libs/hidapi
 	>=dev-libs/libfmt-10.1:=
 	>=dev-util/glslang-1.4.321.0:=
@@ -150,6 +151,7 @@ declare -A KEEP_BUNDLED=(
 
 PATCHES=(
 	"${FILESDIR}"/dolphin-2509-retroachievents-test.patch
+	"${FILESDIR}"/dolphin-9999-system-cpp-ipc.patch
 )
 
 add_bundled_licenses() {
