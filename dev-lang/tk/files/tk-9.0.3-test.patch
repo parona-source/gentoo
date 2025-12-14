@@ -1,0 +1,20 @@
+--- a/tests/font.test	2020-12-26 19:15:55.199228774 +0100
++++ b/tests/font.test	2020-12-26 19:18:05.414951407 +0100
+@@ -399,7 +399,7 @@
+     # (tkfont == NULL)
+     font measure "\{xyz" abc
+ } -returnCodes error -result "font \"{xyz\" does not exist"
+-test font-9.5 {font command: measure} -body {
++test font-9.5 {font command: measure} -constraints knownBug -body {
+     # Tk_TextWidth()
+     expr {[font measure $fixed "abcdefg"] == [font measure $fixed "a"]*7 }
+ } -result 1
+@@ -450,7 +450,7 @@
+     # (Tcl_GetIndexFromObj() != TCL_OK)
+     font metrics $fixed -xyz
+ } -returnCodes error -result {bad metric "-xyz": must be -ascent, -descent, -fixed, or -linespace}
+-test font-10.9 {font command: metrics: get individual metrics} -body {
++test font-10.9 {font command: metrics: get individual metrics} -constraints knownBug -body {
+     font metrics $fixed -ascent
+     font metrics $fixed -descent
+     font metrics $fixed -linespace
