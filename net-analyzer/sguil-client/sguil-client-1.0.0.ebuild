@@ -1,4 +1,4 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -14,7 +14,7 @@ KEYWORDS="~amd64 ~x86"
 IUSE="ssl"
 
 RDEPEND="
-	>=dev-lang/tcl-8.3:0=[-threads]
+	>=dev-lang/tcl-8.3:0=[-threads(+)]
 	>=dev-lang/tk-8.3:0=
 	>=dev-tcltk/itcl-3.2
 	>=dev-tcltk/tclx-8.3

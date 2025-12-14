@@ -17,7 +17,7 @@ KEYWORDS="~alpha amd64 arm arm64 ~hppa ~loong ~m68k ~mips ppc ppc64 ~riscv ~s390
 IUSE="debug doc test threads"
 RESTRICT="!test? ( test )"
 
-DEPEND=">=dev-lang/tcl-8.2:=[threads?]"
+DEPEND=">=dev-lang/tcl-8.2:=[threads(+)?]"
 RDEPEND="${DEPEND}"
 BDEPEND="test? ( dev-util/dejagnu )"
 
