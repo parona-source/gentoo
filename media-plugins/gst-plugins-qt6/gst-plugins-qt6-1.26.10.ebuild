@@ -27,8 +27,6 @@ BDEPEND="
 	dev-qt/qtshadertools:6
 "
 
-PATCHES=( "${FILESDIR}/${PN}-1.24.11-kamoso.patch" ) # in >=1.26.3, bug #958983
-
 src_configure() {
 	local emesonargs=(
 		$(meson_feature X qt-x11)
