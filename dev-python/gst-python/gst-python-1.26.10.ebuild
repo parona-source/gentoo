@@ -21,12 +21,16 @@ RDEPEND="${PYTHON_DEPS}
 	>=media-libs/gst-plugins-bad-${PV}:1.0[introspection]
 	>=media-libs/gst-plugins-base-${PV}:1.0[introspection]
 	>=dev-python/pygobject-3.8:3[${PYTHON_USEDEP}]
-	<dev-python/pygobject-3.52:3
 "
 DEPEND="${RDEPEND}"
 BDEPEND="
 	virtual/pkgconfig
 "
+
+PATCHES=(
+	"${FILESDIR}"/gst-python-1.26.10-pygobject-3.52.patch
+	"${FILESDIR}"/gst-python-1.26.10-skip-test.patch
+)
 
 src_prepare() {
 	default
@@ -64,3 +68,5 @@ src_install() {
 	}
 	python_foreach_impl installing
 }
+
+
