@@ -159,6 +159,7 @@ multilib_src_test() {
 		# flaky
 		pipelines_gl_launch_lines
 		generic_states
+		libs_gstglquery
 	)
 
 	# Affects abi_x86_32
