@@ -112,13 +112,19 @@ multilib_src_configure() {
 
 	if use opengl || use gles2; then
 		# because meson doesn't like extraneous commas
-		local gl_api=( $(use opengl && echo opengl) $(use gles2 && echo gles2) )
-		local gl_platform=( $(use X && use opengl && echo glx) $(use egl && echo egl) )
+		local gl_api=(
+			$(usev opengl)
+			$(usev gles2)
+		)
+		local gl_platform=(
+			$(use X && usev opengl glx)
+			$(usev egl)
+		)
 		local gl_winsys=(
-			$(use X && echo x11)
-			$(use wayland && echo wayland)
-			$(use egl && echo egl)
-			$(use gbm && echo gbm)
+			$(usev X x11)
+			$(usev wayland)
+			$(usev egl)
+			$(usev gbm)
 		)
 
 		emesonargs+=(
