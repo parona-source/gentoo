@@ -1,0 +1,73 @@
+From 3a7acf0993258c64c1939c7728dc62e2286784e7 Mon Sep 17 00:00:00 2001
+From: Alfred Wingate <parona@protonmail.com>
+Date: Fri, 30 Jan 2026 17:31:09 +0200
+Subject: [PATCH] Hack out git dependency
+
+--- a/cmake/modules/CMakeSetup.cmake
++++ b/cmake/modules/CMakeSetup.cmake
+@@ -45,62 +45,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/)
+ # Look for "Config" packages before "Module" ones.
+ set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
+ 
+-# Packages for build
+-find_package(Git REQUIRED)
+-find_package(Python3 REQUIRED)
+-
+ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+ 
+-# Git version variables - either from files (conan & ci), or from git
+-#
+-if (EXISTS "${CMAKE_SOURCE_DIR}/.githash")
+-    file(READ "${CMAKE_SOURCE_DIR}/.githash" GIT_HASH)
+-    file(READ "${CMAKE_SOURCE_DIR}/.gitlonghash" GIT_LONG_HASH)
+-    file(READ "${CMAKE_SOURCE_DIR}/.gitdate" GIT_DATE)
+-    file(READ "${CMAKE_SOURCE_DIR}/.gitbranch" GIT_BRANCH)
+-    file(READ "${CMAKE_SOURCE_DIR}/.gitversion" GIT_VERSION)
+-    file(READ "${CMAKE_SOURCE_DIR}/.gitshortversion" GIT_SHORT_VERSION)
+-else ()
+-    execute_process(
+-        COMMAND git rev-parse --verify --short=8 HEAD
+-        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+-        OUTPUT_VARIABLE GIT_HASH
+-        OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+-    execute_process(
+-        COMMAND git rev-parse --verify --short=10 HEAD
+-        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+-        OUTPUT_VARIABLE GIT_LONG_HASH
+-        OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+-    execute_process(
+-        COMMAND git log -1 --format=%cd --date=format:%Y-%m-%d
+-        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+-        OUTPUT_VARIABLE GIT_DATE
+-        OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+-    execute_process(
+-        COMMAND git rev-parse --abbrev-ref HEAD
+-        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+-        OUTPUT_VARIABLE GIT_BRANCH
+-        OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+-    execute_process(
+-        COMMAND git describe --match "*.*.*" --dirty
+-        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+-        OUTPUT_VARIABLE GIT_VERSION
+-        OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+-    execute_process(
+-        COMMAND git describe --match "*.*.*" --abbrev=0
+-        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+-        OUTPUT_VARIABLE GIT_SHORT_VERSION
+-        OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+-endif ()
+-
+-if (GIT_VERSION STREQUAL ""
+-    OR GIT_SHORT_VERSION STREQUAL ""
+-    OR GIT_HASH STREQUAL "")
+-    message(STATUS "Cannot determine git version, using project version ${CMAKE_PROJECT_VERSION}")
+-else ()
+-    message(STATUS "Git: Version=${GIT_VERSION} ShortVersion=${GIT_SHORT_VERSION} Hash=${GIT_HASH}")
+-endif ()
+-
+ # cmake-format: off
+ file(READ "${CMAKE_SOURCE_DIR}/include/LCEVC/api_defs.h" API_DEFS_CONTENT)
+ string(REGEX MATCH "#define LCEVC_DEC_VERSION_MAJOR ([0-9]+)" API_VERSION_MAJOR_LINE "${API_DEFS_CONTENT}")
+-- 
+2.52.0
+

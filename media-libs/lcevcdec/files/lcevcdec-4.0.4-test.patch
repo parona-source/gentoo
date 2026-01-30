@@ -1,0 +1,149 @@
+From f3a5ff862933d6cc0fbec9318fff6d0f4b5d3f3b Mon Sep 17 00:00:00 2001
+From: Alfred Wingate <parona@protonmail.com>
+Date: Fri, 30 Jan 2026 17:31:29 +0200
+Subject: [PATCH] Hook up tests, dont install tests
+
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -106,6 +106,10 @@ set(PIPELINE_LEGACY_VERSION 1)
+ set(UTILITY_VERSION 1)
+ set(EXTRACT_VERSION 1)
+ 
++if (VN_SDK_UNIT_TESTS)
++    enable_testing()
++endif()
++
+ # Decoder components
+ 
+ # Common
+--- a/cmake/modules/CMakeInstall.cmake
++++ b/cmake/modules/CMakeInstall.cmake
+@@ -98,9 +98,6 @@ endif ()
+ if (VN_SDK_EXECUTABLES)
+     list(APPEND PC_UTILITY_REQUIRES "libxxhash fmt")
+ endif ()
+-if (VN_SDK_UNIT_TESTS)
+-    list(APPEND PC_REQUIRES_PRIVATE "gtest gmock")
+-endif ()
+ set(PC_VULKAN_PIPELINE "no")
+ if (VN_SDK_PIPELINE_VULKAN)
+     if (NOT BUILD_SHARED_LIBS)
+--- a/src/api/test/unit/CMakeLists.txt
++++ b/src/api/test/unit/CMakeLists.txt
+@@ -37,4 +37,4 @@ target_link_libraries(
+             GTest::gtest
+             lcevc_dec::gtest_main)
+ 
+-install(TARGETS lcevc_dec_test_unit)
++add_test(NAME lcevc_dec_test_unit COMMAND lcevc_dec_test_unit WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+--- a/src/common/test/unit/CMakeLists.txt
++++ b/src/common/test/unit/CMakeLists.txt
+@@ -45,4 +45,4 @@ target_link_libraries(
+             GTest::gtest
+             lcevc_dec::gtest_main)
+ 
+-install(TARGETS lcevc_dec_common_test_unit)
++add_test(NAME lcevc_dec_common_test_unit COMMAND lcevc_dec_common_test_unit WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+--- a/src/enhancement/test/unit/CMakeLists.txt
++++ b/src/enhancement/test/unit/CMakeLists.txt
+@@ -36,4 +36,4 @@ target_link_libraries(
+             GTest::gtest
+             lcevc_dec::gtest_main)
+ 
+-install(TARGETS lcevc_dec_enhancement_test_unit)
++add_test(NAME lcevc_dec_enhancement_test_unit COMMAND lcevc_dec_enhancement_test_unit WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+--- a/src/extract/test/unit/CMakeLists.txt
++++ b/src/extract/test/unit/CMakeLists.txt
+@@ -29,4 +29,4 @@ target_link_libraries(
+     PRIVATE lcevc_dec::api_static lcevc_dec::compiler lcevc_dec::platform lcevc_dec::utility
+             GTest::gtest lcevc_dec::gtest_main)
+ 
+-install(TARGETS lcevc_dec_extract_test_unit)
++add_test(NAME lcevc_dec_extract_test_unit COMMAND lcevc_dec_extract_test_unit WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+--- a/src/legacy/test/decoder_unit/CMakeLists.txt
++++ b/src/legacy/test/decoder_unit/CMakeLists.txt
+@@ -38,4 +38,4 @@ target_link_libraries(
+ 
+ add_executable(lcevc_dec::legacy_test_unit ALIAS lcevc_dec_legacy_test_unit)
+ 
+-install(TARGETS lcevc_dec_legacy_test_unit)
++add_test(NAME lcevc_dec_legacy_test_unit COMMAND lcevc_dec_legacy_test_unit WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+--- a/src/legacy/test/sequencer_unit/CMakeLists.txt
++++ b/src/legacy/test/sequencer_unit/CMakeLists.txt
+@@ -26,4 +26,4 @@ target_link_libraries(
+ 
+ add_executable(lcevc_dec::sequencer_test_unit ALIAS lcevc_sequencer_test_unit)
+ 
+-install(TARGETS lcevc_sequencer_test_unit)
++add_test(NAME lcevc_sequencer_test_unit COMMAND lcevc_sequencer_test_unit WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+--- a/src/pipeline/test/unit/CMakeLists.txt
++++ b/src/pipeline/test/unit/CMakeLists.txt
+@@ -31,4 +31,4 @@ target_link_libraries(
+     PRIVATE lcevc_dec::compiler lcevc_dec::platform lcevc_dec::pipeline fmt::fmt GTest::gtest
+             lcevc_dec::gtest_main)
+ 
+-install(TARGETS lcevc_dec_pipeline_test_unit)
++add_test(NAME lcevc_dec_pipeline_test_unit COMMAND lcevc_dec_pipeline_test_unit WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+--- a/src/pipeline_cpu/test/unit/CMakeLists.txt
++++ b/src/pipeline_cpu/test/unit/CMakeLists.txt
+@@ -37,4 +37,4 @@ target_link_libraries(
+             GTest::gtest
+             fmt::fmt)
+ 
+-install(TARGETS lcevc_dec_pipeline_cpu_test_unit)
++add_test(NAME lcevc_dec_pipeline_cpu_test_unit COMMAND lcevc_dec_pipeline_cpu_test_unit WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+--- a/src/pipeline_legacy/test/unit/CMakeLists.txt
++++ b/src/pipeline_legacy/test/unit/CMakeLists.txt
+@@ -41,4 +41,4 @@ target_link_libraries(
+             GTest::gtest
+             lcevc_dec::gtest_main)
+ 
+-install(TARGETS lcevc_dec_pipeline_legacy_test_unit)
++add_test(NAME lcevc_dec_pipeline_legacy_test_unit COMMAND lcevc_dec_pipeline_legacy_test_unit WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+--- a/src/pipeline_vulkan/test/unit/CMakeLists.txt
++++ b/src/pipeline_vulkan/test/unit/CMakeLists.txt
+@@ -36,4 +36,4 @@ target_link_libraries(
+             GTest::gtest
+             fmt::fmt)
+ 
+-install(TARGETS lcevc_dec_pipeline_vulkan_test_unit)
++add_test(NAME lcevc_dec_pipeline_vulkan_test_unit COMMAND lcevc_dec_pipeline_vulkan_test_unit WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+--- a/src/pixel_processing/test/unit/CMakeLists.txt
++++ b/src/pixel_processing/test/unit/CMakeLists.txt
+@@ -42,4 +42,4 @@ target_link_libraries(
+             range-v3::range-v3
+             fmt::fmt)
+ 
+-install(TARGETS lcevc_dec_pixel_processing_test_unit)
++add_test(NAME lcevc_dec_pixel_processing_test_unit COMMAND lcevc_dec_pixel_processing_test_unit WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+--- a/src/utility/CMakeLists.txt
++++ b/src/utility/CMakeLists.txt
+@@ -36,5 +36,7 @@ target_link_libraries(
+ 
+ add_library(lcevc_dec::utility ALIAS lcevc_dec_utility)
+ 
+-lcevc_install(lcevc_dec_utility)
+-install(FILES ${INTERFACES} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/LCEVC/utility")
++if (VN_SDK_EXECUTABLES)
++    lcevc_install(lcevc_dec_utility)
++    install(FILES ${INTERFACES} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/LCEVC/utility")
++endif()
+--- a/src/utility/test/unit/CMakeLists.txt
++++ b/src/utility/test/unit/CMakeLists.txt
+@@ -41,4 +41,4 @@ target_include_directories(lcevc_dec_utility_test_unit PUBLIC "${CMAKE_CURRENT_L
+ 
+ add_executable(lcevc_dec::utility_test_unit ALIAS lcevc_dec_utility_test_unit)
+ 
+-install(TARGETS lcevc_dec_utility_test_unit)
++add_test(NAME lcevc_dec_utility_test_unit COMMAND lcevc_dec_utility_test_unit WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+--- a/src/utility/test/utilities/CMakeLists.txt
++++ b/src/utility/test/utilities/CMakeLists.txt
+@@ -24,5 +24,3 @@ target_include_directories(lcevc_dec_unit_test_utilities PUBLIC "${CMAKE_CURRENT
+ target_link_libraries(lcevc_dec_unit_test_utilities lcevc_dec::utility fmt::fmt)
+ 
+ add_library(lcevc_dec::unit_test_utilities ALIAS lcevc_dec_unit_test_utilities)
+-
+-lcevc_install(lcevc_dec_unit_test_utilities)
+-- 
+2.52.0
+
