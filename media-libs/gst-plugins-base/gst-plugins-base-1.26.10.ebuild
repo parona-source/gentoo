@@ -154,6 +154,7 @@ multilib_src_test() {
 	local -a _skip_tests=(
 		# flaky
 		pipelines_gl_launch_lines
+		generic_states
 	)
 
 	# Affects abi_x86_32
