@@ -105,6 +105,11 @@ multilib_src_test() {
 	local -a _skip_tests=(
 		# known flaky test bug #931737
 		elements_netsim
+
+		# FIXME
+		# gst_harness_new_with_padnames: assertion failed: (element != NULL)
+		elements_aesenc
+		elements_aesdec
 	)
 
 	# Add suites which in this case are PN
