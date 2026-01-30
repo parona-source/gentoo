@@ -60,10 +60,6 @@ src_test() {
 		# tests/check/ges/uriclip.c:71:F:filesource:test_filesource_basic:0: 'g_list_length (trackelements)' (0) is not equal to '1' (1)
 		# tests/check/ges/uriclip.c:244:F:filesource:test_filesource_images:0: Assertion 'ges_uri_clip_asset_is_image (GES_URI_CLIP_ASSET (asset))' failed
 		ges_uriclip
-		# tests/check/ges/asset.c:229:F:a:test_uri_clip_change_asset:0: 'g_list_length (GES_CONTAINER_CHILDREN (extractable))' (1) is not equal to '2' (2)
-		ges_asset
-		# tests/check/ges/project.c:248:F:project:test_project_load_xges:0: 'g_list_length (trackelements)' (0) is not equal to '2' (2)
-		ges_project
 		# tests/check/nle/common.c:50:F:tempochange:test_tempochange_play:0: Failed to make element pitch
 		# tests/check/nle/common.c:50:F:tempochange:test_tempochange_seek:0: Failed to make element pitch
 
