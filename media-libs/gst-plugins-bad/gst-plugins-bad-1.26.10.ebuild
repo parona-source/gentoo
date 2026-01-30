@@ -57,12 +57,14 @@ src_prepare() {
 }
 
 multilib_src_configure() {
-	GST_PLUGINS_NOAUTO="tinyalsa bz2 hls ipcpipeline librfb shm va wayland"
+	GST_PLUGINS_NOAUTO="tinyalsa bz2 hls ipcpipeline lcevcdecoder lcevcencoder librfb shm va wayland"
 
 	local emesonargs=(
 		-Dshm=enabled
 		-Dipcpipeline=enabled
 		-Dhls=disabled
+		-Dlcevcdecoder=disabled # unpackaged dependencies
+		-Dlcevcencoder=disabled # requires a dependency with a proprietary license and no public download
 		$(meson_native_use_feature alsa tinyalsa)
 		$(meson_feature bzip2 bz2)
 		$(meson_feature vaapi va)
