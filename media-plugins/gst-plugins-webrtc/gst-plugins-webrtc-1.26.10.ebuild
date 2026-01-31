@@ -23,7 +23,7 @@ GST_PLUGINS_ENABLED="webrtc webrtcdsp"
 GST_PLUGINS_BUILD_DIR="webrtc webrtcdsp"
 
 PATCHES=(
-	"${FILESDIR}/${PN}-1.24.10-disable-srtp-sctp-dtls-options.patch"
+	"${FILESDIR}/${PN}-1.26.10-disable-srtp-sctp-dtls-options.patch"
 )
 
 src_prepare() {
