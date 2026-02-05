@@ -1,4 +1,4 @@
-# Copyright 1999-2025 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -19,11 +19,7 @@ GROOVY_VERSION="4.0.26"
 APACHE_COMMON_LANG_VERSION="3.17.0"
 APACHE_COMMON_TEXT_VERSION="1.13.0"
 
-_JAVA_PKG_WANT_BUILD_VM=( {openjdk{,-jre},icedtea}{,-bin}-{8,11,17,21} )
-JAVA_PKG_WANT_BUILD_VM=${_JAVA_PKG_WANT_BUILD_VM[@]}
-# Required to be set, but not used.
-JAVA_PKG_WANT_SOURCE="21"
-JAVA_PKG_WANT_TARGET="21"
+JAVA_MAX_VER="21"
 
 PYTHON_REQ_USE="sqlite,ssl"
 PYTHON_COMPAT=( python3_{11..14} )
@@ -31,7 +27,7 @@ PYTHON_COMPAT=( python3_{11..14} )
 # See cmake/scripts/common/ArchSetup.cmake for available options
 CPU_FLAGS="cpu_flags_x86_sse cpu_flags_x86_sse2 cpu_flags_x86_sse3 cpu_flags_x86_sse4_1 cpu_flags_x86_sse4_2 cpu_flags_x86_avx cpu_flags_x86_avx2 cpu_flags_arm_neon"
 
-inherit autotools cmake desktop flag-o-matic java-pkg-2 libtool linux-info optfeature pax-utils python-single-r1 \
+inherit autotools cmake desktop flag-o-matic java-any libtool linux-info optfeature pax-utils python-single-r1 \
 	toolchain-funcs xdg
 
 DESCRIPTION="A free and open source media-player and entertainment hub"
@@ -260,7 +256,6 @@ BDEPEND="
 	dev-build/cmake
 	dev-lang/swig
 	virtual/pkgconfig
-	<=virtual/jre-21-r9999:*
 	doc? (
 		app-text/doxygen
 	)
@@ -280,7 +275,7 @@ Please consider enabling IP_MULTICAST under Networking options.
 
 pkg_setup() {
 	check_extra_config
-	java-pkg-2_pkg_setup
+	java-any_pkg_setup
 	python-single-r1_pkg_setup
 }
 
