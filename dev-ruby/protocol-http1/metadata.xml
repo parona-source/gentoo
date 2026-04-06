@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="project">
+		<email>ruby@gentoo.org</email>
+		<name>Gentoo Ruby Project</name>
+	</maintainer>
+	<upstream>
+		<doc>https://socketry.github.io/protocol-http1/</doc>
+		<remote-id type="github">socketry/protocol-http1</remote-id>
+		<remote-id type="rubygems">protoctol-http1</remote-id>
+	</upstream>
+</pkgmetadata>
