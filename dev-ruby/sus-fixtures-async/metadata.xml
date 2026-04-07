@@ -6,6 +6,8 @@
     <name>Gentoo Ruby Project</name>
   </maintainer>
   <upstream>
+    <doc>https://socketry.github.io/sus-fixtures-async/</doc>
     <remote-id type="github">socketry/sus-fixtures-async</remote-id>
+    <remote-id type="rubygems">sus-fixtures-async</remote-id>
   </upstream>
 </pkgmetadata>
