@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="project">
+		<email>ruby@gentoo.org</email>
+		<name>Gentoo Ruby Project</name>
+	</maintainer>
+	<upstream>
+		<doc>https://socketry.github.io/protocol-hpack/</doc>
+		<remote-id type="github">socketry/protocol-hpack</remote-id>
+		<remote-id type="rubygems">protocol-hpack</remote-id>
+	</upstream>
+</pkgmetadata>
