@@ -6,6 +6,7 @@
     <name>Gentoo Ruby Project</name>
   </maintainer>
   <upstream>
+    <doc>https://socketry.github.io/sus-fixtures-console/</doc>
     <remote-id type="github">socketry/sus-fixtures-console</remote-id>
     <remote-id type="rubygems">sus-fixtures-console</remote-id>
   </upstream>
