@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="project">
+		<email>ruby@gentoo.org</email>
+		<name>Gentoo Ruby Project</name>
+	</maintainer>
+	<upstream>
+		<doc>https://socketry.github.io/sus-fixtures-async-http/</doc>
+		<remote-id type="github">socketry/sus-fixtures-async-http</remote-id>
+		<remote-id type="rubygems">sus-fixtures-async-http</remote-id>
+	</upstream>
+</pkgmetadata>
