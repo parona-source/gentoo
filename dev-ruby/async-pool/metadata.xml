@@ -6,6 +6,8 @@
     <name>Gentoo Ruby Project</name>
   </maintainer>
   <upstream>
+    <doc>https://socketry.github.io/async-pool/</doc>
     <remote-id type="github">socketry/async-pool</remote-id>
+    <remote-id type="rubygems">async-pool</remote-id>
   </upstream>
 </pkgmetadata>
