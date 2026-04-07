@@ -6,6 +6,7 @@
     <name>Gentoo Ruby Project</name>
   </maintainer>
   <upstream>
+    <doc>https://socketry.github.io/io-endpoint</doc>
     <remote-id type="github">socketry/io-endpoint</remote-id>
     <remote-id type="rubygems">io-endpoint</remote-id>
   </upstream>
