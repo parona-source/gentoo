@@ -33,14 +33,35 @@ ruby_add_rdepend "
 "
 
 ruby_add_bdepend "test? (
+	dev-ruby/rack-test
 	dev-ruby/sus-fixtures-async
 	>=dev-ruby/sus-fixtures-async-http-0.8:0
 	dev-ruby/sus-fixtures-openssl
 )"
 
+PATCHES=(
+	"${FILESDIR}"/async-http-0.94.2-ruby4-test.patch
+)
+
 all_ruby_prepare() {
 	sed -i -E 's/require_relative "(.+)"/require File.expand_path("\1")/g' "${RUBY_FAKEGEM_GEMSPEC}" || die
 
+	# Can lead to hangs due to trying to contact the outside world, especially under load.
+	rm test/async/http/client/google.rb  test/async/http/internet.rb || die
+
 	# Remove developer-only test configuration
 	rm -f config/sus.rb || die
+}
+
+each_ruby_test() {
+	# usage of sus-parallel leads to further hangs
+	local sus_params=
+	case ${TEST_VERBOSE} in
+		1|yes|true)
+			sus_params+=" --verbose"
+			;;
+		*)
+			;;
+	esac
+	"${RUBY}" -S sus ${sus_params}
 }
