@@ -7,5 +7,6 @@
   </maintainer>
   <upstream>
     <remote-id type="github">banister/binding_of_caller</remote-id>
+    <remote-id type="rubygems">binding_of_caller</remote-id>
   </upstream>
 </pkgmetadata>
