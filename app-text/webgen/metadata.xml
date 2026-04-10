@@ -12,5 +12,6 @@
   </use>
   <upstream>
     <remote-id type="github">gettalong/webgen</remote-id>
+    <remote-id type="rubygems">webgen</remote-id>
   </upstream>
 </pkgmetadata>
