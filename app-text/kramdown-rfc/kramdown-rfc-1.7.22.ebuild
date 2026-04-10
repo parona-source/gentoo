@@ -3,7 +3,7 @@
 
 EAPI=8
 
-USE_RUBY="ruby31 ruby32 ruby33"
+USE_RUBY="ruby31 ruby32 ruby33 ruby34"
 
 # The software got renamed from kramdown-rfc2629 to kramdown-rfc,
 # however the gem coordinate is still kramdown-rfc2629.
