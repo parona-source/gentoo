@@ -3,6 +3,7 @@
 <pkgmetadata>
 	<!-- maintainer-needed -->
 	<upstream>
+		<remote-id type="rubygems">diakonos</remote-id>
 		<remote-id type="sourcehut">~pistos/diakonos</remote-id>
 	</upstream>
 </pkgmetadata>
