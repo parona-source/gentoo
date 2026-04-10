@@ -1,0 +1,16 @@
+https://github.com/ruby/rdoc/pull/1309
+
+--- a/lib/webgen/path_handler/api.rb
++++ b/lib/webgen/path_handler/api.rb
+@@ -129,7 +129,9 @@ module Webgen
+ 
+       # Return a fully initialized RDoc::Store object.
+       def rdoc_store(options, cache_dir)
+-        store = RDoc::Store.new(cache_dir)
++        # https://github.com/ruby/rdoc/pull/1309
++        store = Gem::Version.new(RDoc::VERSION) >= Gem::Version.new("6.13") ?
++          RDoc::Store.new(RDoc::Options.new, path: cache_dir) : RDoc::Store.new(cache_dir)
+         store.encoding = options.encoding
+         store.dry_run = options.dry_run
+         store.main = options.main_page
+

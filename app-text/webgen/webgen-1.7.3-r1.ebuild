@@ -1,4 +1,4 @@
-# Copyright 1999-2024 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -33,6 +33,10 @@ ruby_add_rdepend ">=dev-ruby/cmdparse-3.0.1:3
 	highlight? ( >=dev-ruby/coderay-1.0 )
 	markdown? ( dev-ruby/maruku )"
 
+PATCHES=(
+	"${FILESDIR}"/webgen-1.7.3-rdoc-6.13.patch
+)
+
 all_ruby_prepare() {
 	# Avoid a test fragile for sass version differences
 	sed -i -e '/test_static_call/,/^  end/ s:^:#:' test/webgen/content_processor/test_sass.rb || die
@@ -50,6 +54,8 @@ all_ruby_prepare() {
 
 	# Fix minitest deprecation
 	sed -i -e 's/MiniTest/Minitest/' $(find test -type f -print) || die
+
+	sed -i -e "/require 'minitest/igem 'minitest', '~>5'" $(find test -type f -print) || die
 }
 
 all_ruby_install() {
