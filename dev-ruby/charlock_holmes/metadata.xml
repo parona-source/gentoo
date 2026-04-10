@@ -7,5 +7,6 @@
   </maintainer>
   <upstream>
     <remote-id type="github">brianmario/charlock_holmes</remote-id>
+    <remote-id type="rubygems">charlock_holmes</remote-id>
   </upstream>
 </pkgmetadata>
