@@ -7,6 +7,7 @@
 	</maintainer>
 	<upstream>
 		<remote-id type='github'>cabo/kramdown-rfc</remote-id>
+		<remote-id type='rubygems'>kramdown-rfc</remote-id>
 		<bugs-to>https://github.com/cabo/kramdown-rfc/issues</bugs-to>
 	</upstream>
 </pkgmetadata>
