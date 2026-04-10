@@ -11,6 +11,6 @@
 </maintainer>
 <upstream>
 	<remote-id type="github">puppetlabs/puppet-lint</remote-id>
-	<remote-id type="rubygems">puppetlabs-puppet-lint</remote-id>
+	<remote-id type="rubygems">puppet-lint</remote-id>
 </upstream>
 </pkgmetadata>
