@@ -513,10 +513,6 @@ virtual/perl-Unicode-Normalize
 # Severe memory leak (bug #953874)
 =app-i18n/ibus-anthy-1.5.17
 
-# Alfred Wingate <parona@protonmail.com> (2025-05-17)
-# Masked for testing
-dev-db/mysql:8.4
-
 # Michał Górny <mgorny@gentoo.org> (2025-04-19)
 # This package will no longer feature stable keywords, due to unresolved
 # test failures blocking the stabilization request for months.
