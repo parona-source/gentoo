@@ -48,6 +48,9 @@ MULTILIB_WRAPPED_HEADERS=(
 )
 
 PATCHES=(
+	# fix CVE-2017-10140, bug 638434
+	"${FILESDIR}"/${PN}-5.3.28-CVE-2017-10140-cwd-db_config.patch
+
 	# sqlite configure call has an extra leading ..
 	# upstreamed:5.2.36, missing in 5.3.x/6.x
 	# still needs to be patched in 6.0.20

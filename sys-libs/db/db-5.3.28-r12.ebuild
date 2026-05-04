@@ -56,6 +56,9 @@ PATCHES=(
 	# upstreamed:5.2.36, missing in 5.3.x
 	"${FILESDIR}"/${PN}-5.2.28-sqlite-configure-path.patch
 
+	# fix CVE-2017-10140, bug 638434
+	"${FILESDIR}"/${PN}-5.3.28-CVE-2017-10140-cwd-db_config.patch
+
 	# The upstream testsuite copies .lib and the binaries for each parallel test
 	# core, ~300MB each. This patch uses links instead, saves a lot of space.
 	"${FILESDIR}"/${PN}-6.0.20-test-link.patch
