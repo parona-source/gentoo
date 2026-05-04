@@ -6,7 +6,7 @@ EAPI=8
 inherit autotools db flag-o-matic multilib-minimal toolchain-funcs
 
 DESCRIPTION="Oracle Berkeley DB"
-HOMEPAGE="https://www.oracle.com/technetwork/database/database-technologies/berkeleydb/overview/index.html"
+HOMEPAGE="https://www.oracle.com/database/technologies/related/berkeleydb.html"
 
 # Number of official patches
 #PATCHNO=`echo ${PV}|sed -e "s,\(.*_p\)\([0-9]*\),\2,"`
