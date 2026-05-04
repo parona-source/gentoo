@@ -48,6 +48,7 @@ PATCHES=(
 	"${FILESDIR}"/${PN}-4.8-wformat-security.patch
 	"${FILESDIR}"/${PN}-4.8.30-clang16.patch
 	"${FILESDIR}"/${PN}-4.8.30-tls-configure.patch
+	"${FILESDIR}"/${PN}-4.8.30-CVE-2017-10140-cwd-db_config.patch
 )
 
 src_prepare() {
