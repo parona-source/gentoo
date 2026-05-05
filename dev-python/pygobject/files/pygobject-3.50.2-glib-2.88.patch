@@ -1,0 +1,675 @@
+https://bugs.gentoo.org/973439
+https://gitlab.gnome.org/GNOME/pygobject/-/merge_requests/492
+
+Cherry-picked locally and modified
+
+From 593ddf62b2a43a907b8c8088050a437d363caf6d Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Marco=20Trevisan=20=28Trevi=C3=B1o=29?= <mail@3v1n0.net>
+Date: Thu, 18 Dec 2025 01:52:02 +0100
+Subject: [PATCH 1/7] overrides/Gio: Cleanup importing of platform-specific Gio
+
+--- a/gi/overrides/Gio.py
++++ b/gi/overrides/Gio.py
+@@ -592,14 +592,22 @@ File = override(File)
+ __all__.append("File")
+ 
+ 
+-GioPlatform = None
++def get_gio_platform():
++    """Return the platform-specific Gio module, if available."""
++    with suppress(ImportError):
++        from gi.repository import GioUnix
+ 
+-with suppress(ImportError):
+-    from gi.repository import GioUnix as GioPlatform
++        return GioUnix
+ 
+-if not GioPlatform:
+     with suppress(ImportError):
+-        from gi.repository import GioWin32 as GioPlatform
++        from gi.repository import GioWin32
++
++        return GioWin32
++
++    return None
++
++
++GioPlatform = get_gio_platform()
+ 
+ if GioPlatform:
+     # Add support for using platform-specific Gio symbols.
+-- 
+2.54.0
+
+
+From 67ab49134448885340f3e4635df62370e47ee761 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Marco=20Trevisan=20=28Trevi=C3=B1o=29?= <mail@3v1n0.net>
+Date: Thu, 18 Dec 2025 01:54:07 +0100
+Subject: [PATCH 2/7] overrides/Gio: Require the same Gio version for platform
+ specific
+
+We are handling a warning but also indeed if a version is required we
+need to use the very same for the platform specific case
+--- a/gi/overrides/Gio.py
++++ b/gi/overrides/Gio.py
+@@ -31,7 +31,11 @@ from ..overrides import (
+ )
+ from .._gi import CallableInfo
+ from ..module import get_introspection_module
+-from gi import PyGIWarning
++from gi import (
++    PyGIWarning,
++    require_version,
++)
++
+ 
+ from gi.repository import GLib
+ 
+@@ -594,12 +598,14 @@ __all__.append("File")
+ 
+ def get_gio_platform():
+     """Return the platform-specific Gio module, if available."""
+-    with suppress(ImportError):
++    with suppress((ValueError, ImportError)):
++        require_version("GioUnix", Gio._version)
+         from gi.repository import GioUnix
+ 
+         return GioUnix
+ 
+-    with suppress(ImportError):
++    with suppress((ValueError, ImportError)):
++        require_version("GioWin32", Gio._version)
+         from gi.repository import GioWin32
+ 
+         return GioWin32
+-- 
+2.54.0
+
+
+From 3e206b9102116dbe5760bda86bab5b22f9d525b9 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Marco=20Trevisan=20=28Trevi=C3=B1o=29?= <mail@3v1n0.net>
+Date: Thu, 18 Dec 2025 01:56:16 +0100
+Subject: [PATCH 3/7] overrides/Gio: Simplify the wrapper name computation
+ using the info type name
+
+In case the type name is not provided or if it's starting with the
+platform name value, we should use it.
+
+By doing this we can drop some custom code that was done to handle cases
+such as UnixInputStreamClass.
+
+This is all already tested and we are still working as expected
+--- a/gi/overrides/Gio.py
++++ b/gi/overrides/Gio.py
+@@ -635,26 +635,13 @@ if GioPlatform:
+             wrapper_attr = f"{platform_name_lower}_{attr}"
+         else:
+             try:
+-                gtype = getattr(original_attr, "__gtype__")
+-                if gtype.name.startswith(f"G{platform_name}"):
++                info = getattr(original_attr, "__info__")
++                type_name = info.get_type_name()
++                if not type_name or type_name.startswith(f"G{platform_name}"):
+                     wrapper_attr = f"{platform_name}{attr}"
+             except AttributeError:
+                 pass
+ 
+-        if wrapper_attr == attr and hasattr(Gio, wrapper_attr):
+-            try:
+-                name = original_attr.__name__[0]
+-            except (AttributeError, IndexError):
+-                name = original_attr
+-
+-            # Fallback if we don't have the original name.
+-            if name.islower():
+-                wrapper_attr = f"{platform_name_lower}_{attr}"
+-            elif "_" in name:
+-                wrapper_attr = f"{platform_name.upper()}_{attr}"
+-            elif name:
+-                wrapper_attr = f"{platform_name}{attr}"
+-
+         if (
+             wrapper_attr in __all__ or
+             wrapper_attr in gio_globals or
+-- 
+2.54.0
+
+
+From b1a350e7f35e35ab4089cb9eec01a2ab5e1fe6b3 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Marco=20Trevisan=20=28Trevi=C3=B1o=29?= <mail@3v1n0.net>
+Date: Thu, 18 Dec 2025 01:59:44 +0100
+Subject: [PATCH 4/7] overrides/Gio: Warn if trying to reuse a symbol in newer
+ GLib
+
+In case the wrapper name is matching the default name, and we're in a
+recent enough version of Gio, we must warn that the wrapper name is
+not part of Gio or we are going to skip it.
+
+For version 2.86 we could even assert this, but let's not break users if
+in future some symbol is matching
+
+But let's just make it clearer.
+--- a/gi/overrides/Gio.py
++++ b/gi/overrides/Gio.py
+@@ -642,6 +642,20 @@ if GioPlatform:
+             except AttributeError:
+                 pass
+ 
++        if (
++            wrapper_attr == attr
++            and (GLib.MAJOR_VERSION, GLib.MINOR_VERSION) >= (2, 86)
++            and hasattr(Gio, wrapper_attr)
++        ):
++            warnings.warn(
++                (
++                    f"Name conflict for platform-specific symbol {platform_name}.{attr}."
++                    + " No wrapper will be created."
++                ),
++                PyGIWarning,
++                stacklevel=2,
++            )
++
+         if (
+             wrapper_attr in __all__ or
+             wrapper_attr in gio_globals or
+-- 
+2.54.0
+
+
+From e1d3603eb8e42791c7a430ce10b53626f4f55d89 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Marco=20Trevisan=20=28Trevi=C3=B1o=29?= <mail@3v1n0.net>
+Date: Thu, 18 Dec 2025 05:51:21 +0100
+Subject: [PATCH 5/7] overrides/GLibUnix: Add signal_add_full with deprecation
+ message
+
+To be in pair with GLib.unix_signal_add_full
+--- /dev/null
++++ b/gi/overrides/GLibUnix.py
+@@ -0,0 +1,14 @@
++# Copyright 2025 Marco Trevisan
++# SPDX-License-Identifier: LGPL-2.1-or-later
++
++from ..module import get_introspection_module
++from ..overrides import deprecated_attr
++
++GLibUnix = get_introspection_module("GLibUnix")
++
++__all__ = []
++
++if hasattr(GLibUnix, "signal_add"):
++    signal_add_full = GLibUnix.signal_add
++    __all__.append("signal_add_full")
++    deprecated_attr("GLibUnix", "signal_add_full", "GLibUnix.signal_add")
+--- a/gi/overrides/meson.build
++++ b/gi/overrides/meson.build
+@@ -1,5 +1,6 @@
+ python_sources = [
+   'GLib.py',
++  'GLibUnix.py',
+   'Gtk.py',
+   'Gdk.py',
+   'GdkPixbuf.py',
+-- 
+2.54.0
+
+
+From e94d3546c7ff155ad6fd0ed0398bb2d018afaec2 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Marco=20Trevisan=20=28Trevi=C3=B1o=29?= <mail@3v1n0.net>
+Date: Thu, 18 Dec 2025 02:27:12 +0100
+Subject: [PATCH 6/7] module: Generalize functions for platform specific
+ modules and symbols
+
+We are going to reuse the same logic in more places so let's make this
+more generic
+--- a/gi/module.py
++++ b/gi/module.py
+@@ -21,11 +21,14 @@
+ # USA
+ 
+ import importlib
++from contextlib import suppress
+ from threading import Lock
+ 
+ import gi
++import warnings
+ 
+ from ._gi import \
++    CallableInfo, \
+     Repository, \
+     FunctionInfo, \
+     RegisteredTypeInfo, \
+@@ -267,3 +270,47 @@ def get_introspection_module(namespace):
+     module = IntrospectionModule(namespace, version)
+     _introspection_modules[namespace] = module
+     return module
++
++
++def get_platform_specific_module(namespace):
++    """Return the platform-specific module for the given namespace, if available."""
++    with suppress((ValueError, ImportError)):
++        gi.require_version(f"{namespace._namespace}Unix", namespace._version)
++        return importlib.import_module(f"gi.repository.{namespace._namespace}Unix")
++
++    with suppress((ValueError, ImportError)):
++        gi.require_version(f"{namespace._namespace}Win32", namespace._version)
++        return importlib.import_module(f"gi.repository.{namespace._namespace}Win32")
++
++    return None
++
++
++def get_fallback_platform_specific_module_symbol(
++    namespace, platform_namespace, symbol, prefix="g"
++):
++    """Return the original attribute and the wrapper attribute name for a
++    platform-specific symbol fallback.
++    """
++    with warnings.catch_warnings():
++        warnings.simplefilter("ignore", gi.PyGIDeprecationWarning)
++        original_attr = getattr(platform_namespace, symbol)
++    wrapper_attr = symbol
++
++    assert platform_namespace._namespace.startswith(namespace._namespace)
++    platform_name = f"{platform_namespace._namespace[len(namespace._namespace) :]}"
++    platform_name_lower = platform_name.lower()
++
++    if isinstance(
++        original_attr, CallableInfo
++    ) and original_attr.get_symbol().startswith(f"{prefix}_{platform_name_lower}_"):
++        wrapper_attr = f"{platform_name_lower}_{symbol}"
++    else:
++        try:
++            info = getattr(original_attr, "__info__")
++            type_name = info.get_type_name()
++            if not type_name or type_name.startswith(f"G{platform_name}"):
++                wrapper_attr = f"{platform_name}{symbol}"
++        except AttributeError:
++            pass
++
++    return (original_attr, wrapper_attr)
+--- a/gi/overrides/Gio.py
++++ b/gi/overrides/Gio.py
+@@ -19,7 +19,6 @@
+ # USA
+ 
+ import warnings
+-from contextlib import suppress
+ 
+ from .._ossighelper import register_sigint_fallback, get_event_loop
+ from ..overrides import (
+@@ -29,12 +28,12 @@ from ..overrides import (
+     wrap_list_store_equal_func,
+     wrap_list_store_sort_func,
+ )
+-from .._gi import CallableInfo
+-from ..module import get_introspection_module
+-from gi import (
+-    PyGIWarning,
+-    require_version,
++from ..module import (
++    get_introspection_module,
++    get_fallback_platform_specific_module_symbol,
++    get_platform_specific_module,
+ )
++from gi import PyGIWarning
+ 
+ 
+ from gi.repository import GLib
+@@ -596,51 +595,19 @@ File = override(File)
+ __all__.append("File")
+ 
+ 
+-def get_gio_platform():
+-    """Return the platform-specific Gio module, if available."""
+-    with suppress((ValueError, ImportError)):
+-        require_version("GioUnix", Gio._version)
+-        from gi.repository import GioUnix
+-
+-        return GioUnix
+-
+-    with suppress((ValueError, ImportError)):
+-        require_version("GioWin32", Gio._version)
+-        from gi.repository import GioWin32
+-
+-        return GioWin32
+-
+-    return None
+-
+-
+-GioPlatform = get_gio_platform()
++GioPlatform = get_platform_specific_module(Gio)
+ 
+ if GioPlatform:
+     # Add support for using platform-specific Gio symbols.
+     gio_globals = globals()
+ 
+-    platform_name = f"{GioPlatform._namespace[len(Gio._namespace):]}"
+-    platform_name_lower = platform_name.lower()
+-
+     for attr in dir(GioPlatform):
+         if attr.startswith("_"):
+             continue
+ 
+-        original_attr = getattr(GioPlatform, attr)
+-        wrapper_attr = attr
+-
+-        if isinstance(
+-            original_attr, CallableInfo
+-        ) and original_attr.get_symbol().startswith(f"g_{platform_name_lower}_"):
+-            wrapper_attr = f"{platform_name_lower}_{attr}"
+-        else:
+-            try:
+-                info = getattr(original_attr, "__info__")
+-                type_name = info.get_type_name()
+-                if not type_name or type_name.startswith(f"G{platform_name}"):
+-                    wrapper_attr = f"{platform_name}{attr}"
+-            except AttributeError:
+-                pass
++        original_attr, wrapper_attr = get_fallback_platform_specific_module_symbol(
++            Gio, GioPlatform, attr
++        )
+ 
+         if (
+             wrapper_attr == attr
+@@ -649,7 +616,7 @@ if GioPlatform:
+         ):
+             warnings.warn(
+                 (
+-                    f"Name conflict for platform-specific symbol {platform_name}.{attr}."
++                    f"Name conflict for platform-specific symbol {GioPlatform._namespace}.{attr}."
+                     + " No wrapper will be created."
+                 ),
+                 PyGIWarning,
+-- 
+2.54.0
+
+
+From 0935dda827fbab4aae71397a88a3fd3b6e6766c7 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Marco=20Trevisan=20=28Trevi=C3=B1o=29?= <mail@3v1n0.net>
+Date: Thu, 18 Dec 2025 02:35:15 +0100
+Subject: [PATCH 7/7] overrides/GLib: Add GLib wrappers for GLibUnix symbols
+
+In GLib 2.88 we are dropping the GLib platform-specific symbols from the
+main GLib namespace upstream, but again we don't want to break current
+applications that may use them, so let's handle this breakage in the
+bindings by adding wrappers.
+
+We use the same logic of Gio here.
+
+However, differently from what happens in Gio here we do not have any
+GType, and so no introspectable classes, thus we do not have to do any
+extra override to support the older versions
+--- a/gi/overrides/GLib.py
++++ b/gi/overrides/GLib.py
+@@ -24,9 +24,12 @@ import sys
+ import socket
+ 
+ from .._ossighelper import register_sigint_fallback, get_event_loop
+-from ..module import get_introspection_module
++from ..module import (get_introspection_module,
++                      get_fallback_platform_specific_module_symbol,
++                      get_platform_specific_module,)
+ from .._gi import (variant_type_from_string, source_new,
+-                   source_set_callback, io_channel_read)
++                   source_set_callback, io_channel_read,
++                   PyGIWarning)
+ from ..overrides import override, deprecated, deprecated_attr
+ from gi import PyGIDeprecationWarning, version_info
+ 
+@@ -880,3 +883,49 @@ deprecated_attr("GLib", "glib_version",
+ pyglib_version = version_info
+ __all__.append('pyglib_version')
+ deprecated_attr("GLib", "pyglib_version", "gi.version_info")
++
++GLibPlatform = get_platform_specific_module(GLib)
++
++if GLibPlatform:
++    # Add support for using platform-specific GLib symbols.
++    glib_globals = globals()
++
++    for attr in dir(GLibPlatform):
++        if attr.startswith("_"):
++            continue
++
++        original_attr, wrapper_attr = get_fallback_platform_specific_module_symbol(
++            GLib, GLibPlatform, attr
++        )
++
++        if (
++            wrapper_attr == attr
++            and (GLib.MAJOR_VERSION, GLib.MINOR_VERSION) >= (2, 88)
++            and hasattr(GLib, wrapper_attr)
++        ):
++            warnings.warn(
++                (
++                    f"Name conflict for platform-specific symbol {GLibPlatform._namespace}.{attr}."
++                    + " No wrapper will be created."
++                ),
++                PyGIWarning,
++                stacklevel=2,
++            )
++
++        if (
++            wrapper_attr in __all__
++            or wrapper_attr in glib_globals
++            or hasattr(GLib, wrapper_attr)
++        ):
++            continue
++
++        glib_globals[wrapper_attr] = original_attr
++        deprecated_attr(
++            GLib._namespace, wrapper_attr, f"{GLibPlatform._namespace}.{attr}"
++        )
++        __all__.append(wrapper_attr)
++
++if hasattr(GLibPlatform, "signal_add"):
++    deprecated_attr(
++        "GLib", "unix_signal_add_full", f"{GLibPlatform._namespace}.signal_add"
++    )
+--- a/tests/test_glib.py
++++ b/tests/test_glib.py
+@@ -1,5 +1,6 @@
+ # -*- Mode: Python -*-
+ 
++import contextlib
+ import os
+ import sys
+ import unittest
+@@ -12,6 +13,14 @@ from gi.repository import GLib
+ from gi import PyGIDeprecationWarning
+ 
+ 
++PLATFORM_SPLIT_VERSION = (2, 88)
++
++
++GLibUnix = None
++with contextlib.suppress(ImportError):
++    from gi.repository import GLibUnix
++
++
+ class TestGLib(unittest.TestCase):
+ 
+     @pytest.mark.xfail()
+@@ -293,3 +302,180 @@ https://my.org/q?x=1&y=2
+         source_id = source.attach()
+         self.assertEqual(context, source.get_context())
+         self.assertTrue(GLib.Source.remove(source_id))
++
++
++class TestGLibPlatform(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        # TODO: Make this more dynamic in case we'll support Win32
++        cls.platform_glib = GLibUnix
++
++        if cls.platform_glib:
++            cls.platform_full_name = cls.platform_glib._namespace
++            cls.platform_name = f"{cls.platform_full_name[len(GLib._namespace) :]}"
++
++        unittest.TestCase.setUpClass()
++
++    def assertPlatformTypeFallback(self, symbol_name):
++        self.assertIn(symbol_name, dir(GLib))
++
++        platform_symbol_name = symbol_name
++        if symbol_name.startswith(f"{self.platform_name}"):
++            platform_symbol_name = symbol_name[len(self.platform_name) :]
++        elif symbol_name.startswith(f"{self.platform_name.lower()}_"):
++            platform_symbol_name = symbol_name[len(self.platform_name) + 1 :]
++
++        with warnings.catch_warnings(record=True) as warn:
++            symbol = getattr(GLib, symbol_name)
++            self.assertIsNotNone(symbol)
++
++            platform_symbol = getattr(self.platform_glib, platform_symbol_name)
++            self.assertIsNotNone(platform_symbol)
++            self.maybeAssertDeprecationWarning(warn, symbol_name, platform_symbol_name)
++
++            if (GLib.MAJOR_VERSION, GLib.MINOR_VERSION) >= PLATFORM_SPLIT_VERSION:
++                self.assertEqual(platform_symbol, symbol)
++
++    def maybeAssertDeprecationWarning(self, warn, symbol_name, new_symbol_name):
++        if (GLib.MAJOR_VERSION, GLib.MINOR_VERSION) >= PLATFORM_SPLIT_VERSION:
++            self.assertDeprecationWarning(
++                warn,
++                "GLib",
++                self.platform_full_name,
++                symbol_name,
++                new_symbol_name,
++            )
++
++    def assertDeprecationWarning(
++        self, warn, namespace, new_namespace, symbol_name, new_symbol_name
++    ):
++        self.assertGreaterEqual(len(warn), 1)
++        self.assertTrue(
++            any(issubclass(w.category, PyGIDeprecationWarning) for w in warn)
++        )
++
++        expected_message = (
++            f"{namespace}.{symbol_name} is deprecated; "
++            + f"use {new_namespace}.{new_symbol_name} instead"
++        )
++        if len(warn) == 1:
++            self.assertEqual(expected_message, str(warn[0].message))
++            return
++
++        self.assertIn(
++            expected_message,
++            [str(w.message) for w in warn],
++        )
++
++    @unittest.skipIf(GLibUnix is None, "Not supported")
++    def test_fallback_unix_pipe(self):
++        self.assertPlatformTypeFallback("UnixPipe")
++
++    @unittest.skipIf(GLibUnix is None, "Not supported")
++    def test_fallback_unix_pipe_end(self):
++        self.assertPlatformTypeFallback("UnixPipeEnd")
++
++    @unittest.skipIf(GLibUnix is None, "Not supported")
++    def test_fallback_closefrom(self):
++        self.assertPlatformTypeFallback("closefrom")
++
++    @unittest.skipIf(GLibUnix is None, "Not supported")
++    def test_fallback_unix_error_quark(self):
++        self.assertPlatformTypeFallback("unix_error_quark")
++
++    @unittest.skipIf(GLibUnix is None, "Not supported")
++    def test_fallback_unix_fd_add_full(self):
++        self.assertPlatformTypeFallback("unix_fd_add_full")
++
++    @unittest.skipIf(
++        GLibUnix is None or (GLib.MAJOR_VERSION, GLib.MINOR_VERSION) < (2, 87),
++        "Not supported",
++    )
++    def test_fallback_unix_fd_query_path(self):
++        self.assertPlatformTypeFallback("unix_fd_query_path")
++
++    @unittest.skipIf(GLibUnix is None, "Not supported")
++    def test_fallback_unix_fd_source_new(self):
++        self.assertPlatformTypeFallback("unix_fd_source_new")
++
++    @unittest.skipIf(GLibUnix is None, "Not supported")
++    def test_fallback_fdwalk_set_cloexec(self):
++        self.assertPlatformTypeFallback("fdwalk_set_cloexec")
++
++    @unittest.skipIf(GLibUnix is None, "Not supported")
++    def test_fallback_unix_get_passwd_entry(self):
++        self.assertPlatformTypeFallback("unix_get_passwd_entry")
++
++    @unittest.skipIf(GLibUnix is None, "Not supported")
++    def test_fallback_unix_open_pipe(self):
++        self.assertPlatformTypeFallback("unix_open_pipe")
++
++    @unittest.skipIf(GLibUnix is None, "Not supported")
++    def test_fallback_unix_set_fd_nonblocking(self):
++        self.assertPlatformTypeFallback("unix_set_fd_nonblocking")
++
++    @unittest.skipIf(
++        GLibUnix is None
++        or (GLib.MAJOR_VERSION, GLib.MINOR_VERSION) < PLATFORM_SPLIT_VERSION,
++        "Not supported",
++    )
++    def test_fallback_unix_signal_add(self):
++        self.assertPlatformTypeFallback("unix_signal_add")
++
++    @unittest.skipIf(GLibUnix is None, "Not supported")
++    def test_fallback_unix_signal_add_full(self):
++        self.assertPlatformTypeFallback(
++            "unix_signal_add"
++            if "signal_add" in dir(GLibUnix)
++            else "unix_signal_add_full"
++        )
++
++    @unittest.skipIf(GLibUnix is None, "Not supported")
++    def test_fallback_unix_signal_source_new(self):
++        self.assertPlatformTypeFallback("unix_signal_source_new")
++
++    @unittest.skipIf(GLibUnix is None, "Not supported")
++    def test_glib_unix_pipe(self):
++        pipe = GLibUnix.Pipe()
++        self.assertEqual(pipe.fds, [0, 0])
++
++    @unittest.skipIf(GLibUnix is None, "Not supported")
++    def test_glib_unix_pipe_fallback(self):
++        with warnings.catch_warnings(record=True) as warn:
++            pipe = GLib.UnixPipe()
++            self.maybeAssertDeprecationWarning(warn, "UnixPipe", "Pipe")
++        self.assertEqual(pipe.fds, [0, 0])
++
++    @unittest.skipIf(GLibUnix is None, "Not supported")
++    def test_glib_unix_error_quark(self):
++        self.assertGreater(GLibUnix.error_quark(), 0)
++
++    @unittest.skipIf(GLibUnix is None, "Not supported")
++    def test_glib_unix_error_quark_fallback(self):
++        with warnings.catch_warnings(record=True) as warn:
++            self.assertGreater(GLib.unix_error_quark(), 0)
++            self.maybeAssertDeprecationWarning(warn, "unix_error_quark", "error_quark")
++
++    @unittest.skipIf(
++        GLibUnix is None
++        or (GLib.MAJOR_VERSION, GLib.MINOR_VERSION) < PLATFORM_SPLIT_VERSION,
++        "Not supported",
++    )
++    def test_glib_unix_signal_add_full_deprecation(self):
++        with warnings.catch_warnings(record=True) as warn:
++            self.assertIsNotNone(GLibUnix.signal_add_full)
++            self.assertDeprecationWarning(
++                warn, "GLibUnix", "GLibUnix", "signal_add_full", "signal_add"
++            )
++
++    @unittest.skipIf(GLibUnix is None, "Not supported")
++    def test_glib_unix_signal_add_full_wrapper_deprecation(self):
++        with warnings.catch_warnings(record=True) as warn:
++            self.assertIsNotNone(GLib.unix_signal_add_full)
++            new_namespace = "GLibUnix" if "signal_add" in dir(GLibUnix) else "GLib"
++            new_symbol = (
++                "signal_add" if "signal_add" in dir(GLibUnix) else "unix_signal_add"
++            )
++            self.assertDeprecationWarning(
++                warn, "GLib", new_namespace, "unix_signal_add_full", new_symbol
++            )
+-- 
+2.54.0
+
