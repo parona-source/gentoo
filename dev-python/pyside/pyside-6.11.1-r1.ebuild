@@ -568,6 +568,9 @@ python_compile() {
 		-e "s~\${PACKAGE_PREFIX_DIR}/~\${PACKAGE_PREFIX_DIR}/share/PySide6/~g" \
 		-e "s~\${_IMPORT_PREFIX}/shiboken6/include~/usr/include/shiboken6~g" \
 		-e "s~\${_IMPORT_PREFIX}/PySide6/include~/usr/include/PySide6~g" \
+		-e "s~set_and_check(PYSIDE_PYTHONPATH .*~set_and_check(PYSIDE_PYTHONPATH \"\${PACKAGE_PREFIX_DIR}/share/PySide6/\")~" \
+		-e "s~set_and_check(PYSIDE_TYPESYSTEMS .*~set_and_check(PYSIDE_TYPESYSTEMS \"\${PACKAGE_PREFIX_DIR}/share/PySide6/typesystems\")~" \
+		-e "s~set_and_check(PYSIDE_GLUE .*~set_and_check(PYSIDE_GLUE \"\${PACKAGE_PREFIX_DIR}/share/PySide6/glue\")~" \
 		-i "${BUILD_DIR}/install/usr/lib/cmake/"*/*.cmake || die
 	local file
 	for file in "${BUILD_DIR}/install/usr/lib/cmake/"*/*.cpython-*.cmake
