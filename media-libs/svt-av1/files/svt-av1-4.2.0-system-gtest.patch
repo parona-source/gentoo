@@ -1,0 +1,66 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -771,7 +771,6 @@ if(BUILD_TESTING)
+     include(CTest)
+     message(STATUS "Building UnitTests")
+     add_subdirectory(test)
+-    add_subdirectory(third_party/googletest)
+ endif()
+ 
+ add_subdirectory(third_party/fastfeat)
+--- a/test/CMakeLists.txt
++++ b/test/CMakeLists.txt
+@@ -16,8 +16,6 @@
+ include_directories(
+   ${PROJECT_SOURCE_DIR}/test/
+   ${PROJECT_SOURCE_DIR}/test/ref
+-  ${PROJECT_SOURCE_DIR}/third_party/googletest/include
+-  third_party/googletest/src
+   ${PROJECT_SOURCE_DIR}/Source/API
+   ${PROJECT_SOURCE_DIR}/Source/Lib/C_DEFAULT/
+   ${PROJECT_SOURCE_DIR}/Source/Lib/ASM_SSE2/
+@@ -34,22 +32,15 @@ include_directories(
+   ${PROJECT_SOURCE_DIR}/third_party/fastfeat/
+   ${PROJECT_SOURCE_DIR}/third_party/aom_dsp/inc/)
+ 
+-# Define helper functions and macros used by Google Test.
+-include(../third_party/googletest/cmake/internal_utils.cmake)
++find_package(GTest REQUIRED)
++include(GoogleTest)
+ 
+ if(MSVC)
+   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_ALLOW_KEYWORD_MACROS")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_ALLOW_KEYWORD_MACROS")
+ endif()
+ 
+-# When other libraries are using a shared version of runtime libraries, Google
+-# Test also has to use one.
+-option(
+-  gtest_force_shared_crt
+-  "Use shared (DLL) run-time lib even when Google Test is built as static lib."
+-  OFF)
+-
+ add_definitions(-D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING=1)
+ 
+ enable_testing()
+ 
+@@ -158,7 +146,7 @@ set(arch_neutral_lib_list
+     $<TARGET_OBJECTS:C_DEFAULT>
+     $<TARGET_OBJECTS:GLOBALS>
+     $<TARGET_OBJECTS:CODEC>
+-    gtest_all)
++    GTest::gtest_main)
+ 
+ if(HAVE_X86_PLATFORM)
+   set(x86_arch_lib_list
+--- a/test/svt_av1_test.cc
++++ b/test/svt_av1_test.cc
+@@ -14,7 +14,7 @@
+ #include <cstdio>
+ #include <cstdlib>
+ 
+-#include "third_party/googletest/include/gtest/gtest.h"
++#include "gtest/gtest.h"
+ 
+ // The test sources themselves must be compiled in test mode. If this fires, the
+ // CMake configure did not set SVT_AV1_UNIT_TEST_BUILD (BUILD_TESTING=ON).

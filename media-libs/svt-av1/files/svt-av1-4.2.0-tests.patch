@@ -1,0 +1,135 @@
+Allow non-arch specific tests to work outside of amd64 and arm64.
+
+--- a/Source/Lib/Codec/common_dsp_rtcd.c
++++ b/Source/Lib/Codec/common_dsp_rtcd.c
+@@ -287,6 +287,7 @@ EbCpuFlags svt_aom_get_cpu_flags_to_use() {
+ }
+ 
+ #else
++EbCpuFlags svt_aom_get_cpu_flags() { return 0; }
+ EbCpuFlags svt_aom_get_cpu_flags_to_use() { return 0; }
+ #endif
+ #endif
+--- a/Source/Lib/Codec/common_dsp_rtcd.h
++++ b/Source/Lib/Codec/common_dsp_rtcd.h
+@@ -37,10 +37,8 @@ extern "C" {
+ #endif
+ 
+ // Helper Functions
+-#if defined ARCH_X86_64 || defined ARCH_AARCH64
+ EbCpuFlags svt_aom_get_cpu_flags();
+ EbCpuFlags svt_aom_get_cpu_flags_to_use();
+-#endif
+ void svt_aom_setup_common_rtcd_internal(EbCpuFlags flags);
+ 
+ // Returns 1 if the library was compiled with SVT_AV1_UNIT_TEST_BUILD defined,
+--- a/test/CMakeLists.txt
++++ b/test/CMakeLists.txt
+@@ -81,6 +76,7 @@ set(arch_neutral_files
+     ../third_party/aom_dsp/src/bitreader.c
+     ../third_party/aom_dsp/src/entdec.c)
+ 
++if(HAVE_X86_PLATFORM OR HAVE_ARM_PLATFORM)
+ set(multi_arch_files
+     AdaptiveScanTest.cc
+     BlockErrorTest.cc
+@@ -132,6 +128,7 @@ set(multi_arch_files
+     warp_filter_test_util.cc
+     warp_filter_test_util.h
+     wiener_convolve_test.cc)
++endif()
+ 
+ if(HAVE_X86_PLATFORM)
+   set(x86_arch_files
+
+Fix tests for cpu's lacking AVX2.
+https://bugs.gentoo.org/980406
+
+--- a/test/CMakeLists.txt
++++ b/test/CMakeLists.txt
+@@ -53,11 +53,6 @@ add_definitions(-D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING=1)
+ 
+ enable_testing()
+ 
+-if(UNIX AND HAVE_X86_PLATFORM)
+-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2")
+-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
+-endif()
+-
+ set(arch_neutral_files
+     BitstreamWriterTest.cc
+     unit_test.h
+--- a/test/MotionEstimationTest.cc
++++ b/test/MotionEstimationTest.cc
+@@ -266,19 +266,19 @@ void sadMxNx4d_speed_test(const AomSadMultiDFn *const func_table) {
+     uninit_data(src_ptr, ref_ptr[0]);
+ }
+ 
+-TEST(MotionEstimation_avx2, sadMxN_match) {
++TEST(MotionEstimation_AVX2, sadMxN_match) {
+     sadMxN_match_test(aom_sad_avx2_func_ptr_array);
+ }
+ 
+-TEST(MotionEstimation_avx2, sadMxNx4d_match) {
++TEST(MotionEstimation_AVX2, sadMxNx4d_match) {
+     sadMxNx4d_match_test(aom_sad_4d_avx2_func_ptr_array);
+ }
+ 
+-TEST(MotionEstimation_avx2, DISABLED_sadMxN_speed) {
++TEST(MotionEstimation_AVX2, DISABLED_sadMxN_speed) {
+     sadMxN_speed_test(aom_sad_avx2_func_ptr_array);
+ }
+ 
+-TEST(MotionEstimation_avx2, DISABLED_sadMxNx4d_speed) {
++TEST(MotionEstimation_AVX2, DISABLED_sadMxNx4d_speed) {
+     sadMxNx4d_speed_test(aom_sad_4d_avx2_func_ptr_array);
+ }
+ 
+@@ -333,19 +333,19 @@ AomSadMultiDFn aom_sad_4d_avx512_func_ptr_array[num_sad] = {
+     svt_aom_sad128x64x4d_avx512,
+     svt_aom_sad128x128x4d_avx512};
+ 
+-TEST(AVX512_MotionEstimation_avx512, sadMxN_match) {
++TEST(AVX512_MotionEstimation_AVX512, sadMxN_match) {
+     sadMxN_match_test(aom_sad_avx512_func_ptr_array);
+ }
+ 
+-TEST(AVX512_MotionEstimation_avx512, sadMxNx4d_match) {
++TEST(AVX512_MotionEstimation_AVX512, sadMxNx4d_match) {
+     sadMxNx4d_match_test(aom_sad_4d_avx512_func_ptr_array);
+ }
+ 
+-TEST(AVX512_MotionEstimation_avx512, DISABLED_sadMxN_speed) {
++TEST(AVX512_MotionEstimation_AVX512, DISABLED_sadMxN_speed) {
+     sadMxN_speed_test(aom_sad_avx512_func_ptr_array);
+ }
+ 
+-TEST(AVX512_MotionEstimation_avx512, DISABLED_sadMxNx4d_speed) {
++TEST(AVX512_MotionEstimation_AVX512, DISABLED_sadMxNx4d_speed) {
+     sadMxNx4d_speed_test(aom_sad_4d_avx512_func_ptr_array);
+ }
+ 
+--- a/test/svt_av1_test.cc
++++ b/test/svt_av1_test.cc
+@@ -42,6 +42,20 @@ static void append_negative_gtest_filter(const char *str) {
+         flag_value += search_terminators[pos];
+         flag_value += "*";
+     }
++    // *OPT$ matches TEST() functions
++    flag_value += ":";
++    flag_value += "*";
++    flag_value += str;
++    flag_value += "$";
++
++#if ARCH_X86_64
++    // Special handling for CDEFBlockTest where SSE4_1 uses AVX2
++    if (str == "AVX2") {
++        flag_value += ":";
++        flag_value += "CDEFBlockTest";
++    }
++#endif
++
+     GTEST_FLAG_SET(filter, flag_value);
+ }
+ #endif  // ARCH_AARCH64 || ARCH_X86_64
+
