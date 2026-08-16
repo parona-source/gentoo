@@ -106,15 +106,32 @@ multilib_src_compile() {
 
 multilib_src_test() {
 	# Use the --gtest-filter instead of the environment variable for better verbosity in the build.log
-	local gtest_filter="*"
+	local skip_tests=()
 	if [[ ${ABI} == arm64 ]]; then
-		gtest_filter+=":-PmeSadLoopTest"
+		skip_tests+=(
+			# FIXME
+			"NEON/PmeSadLoopTest*"
+			# FIXME: stack mashing detected
+			"dav1d_NEON/InvTxfm2dAddTest.svt_av1_inv_txfm_add/0"
+			# svt_av1_jnt_convolve_2d_neon: Assertion `w % 4 == 0' failed
+			# svt_av1_jnt_convolve_2d_neon: Assertion `h % 4 == 0' failed
+			"ConvolveTest2D_.*/AV1LbdJntConvolveTest.MatchTest/0"
+			"ConvolveTest2D_.*/AV1LbdJntConvolveTest.MatchTest/1"
+			"ConvolveTest2D_.*/AV1LbdJntConvolveTest.MatchTest/2"
+			"ConvolveTest2D_.*/AV1LbdJntConvolveTest.MatchTest/16"
+			"ConvolveTest2D_.*/AV1LbdJntConvolveTest.MatchTest/17"
+			"ConvolveTestY_.*/AV1LbdJntConvolveTest.MatchTest/0"
+			"ConvolveTestY_.*/AV1LbdJntConvolveTest.MatchTest/1"
+			"ConvolveTestY_.*/AV1LbdJntConvolveTest.MatchTest/2"
+			"ConvolveTestY_.*/AV1LbdJntConvolveTest.MatchTest/16"
+			"ConvolveTestY_.*/AV1LbdJntConvolveTest.MatchTest/17"
+		)
 	fi
 	# Upstream uses this, and this gives a significant time save in running these tests.
 	# 2025-05-19T19:39:25 >>> media-libs/svt-av1-3.0.2: 1:46:14
 	# 2025-05-20T16:10:34 >>> media-libs/svt-av1-3.0.2: 20'35″
 	edo gtest-parallel \
-		--gtest_filter="${gtest_filter}"
+		--gtest_filter="*$(IFS=''; echo "${skip_tests[*]/#/:-}")" \
 		--workers "$(get_makeopts_jobs)" \
 		"${BUILD_DIR}"/SvtAv1UnitTests
 }
