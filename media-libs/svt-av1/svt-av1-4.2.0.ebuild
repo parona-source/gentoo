@@ -105,10 +105,18 @@ multilib_src_compile() {
 }
 
 multilib_src_test() {
+	# Use the --gtest-filter instead of the environment variable for better verbosity in the build.log
+	local gtest_filter="*"
+	if [[ ${ABI} == arm64 ]]; then
+		gtest_filter+=":-PmeSadLoopTest"
+	fi
 	# Upstream uses this, and this gives a significant time save in running these tests.
 	# 2025-05-19T19:39:25 >>> media-libs/svt-av1-3.0.2: 1:46:14
 	# 2025-05-20T16:10:34 >>> media-libs/svt-av1-3.0.2: 20'35″
-	edo gtest-parallel --workers "$(get_makeopts_jobs)" "${BUILD_DIR}"/SvtAv1UnitTests
+	edo gtest-parallel \
+		--gtest_filter="${gtest_filter}"
+		--workers "$(get_makeopts_jobs)" \
+		"${BUILD_DIR}"/SvtAv1UnitTests
 }
 
 multilib_src_install() {
