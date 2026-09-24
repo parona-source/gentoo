@@ -212,10 +212,6 @@ src_prepare() {
 	einfo "removing sources: ${remove[*]}"
 	rm -r "${remove[@]}" || die
 
-	# Use ccache only when user did set FEATURES=ccache (or similar)
-	# # not when ccache binary is present in system (automagic).
-	sed -e '/include(CCache)/d' -i CMakeLists.txt || die
-
 	# Remove dirty suffix: needed for netplay
 	sed -i -e 's/--dirty/&=""/' CMake/ScmRevGen.cmake || die
 }
@@ -272,6 +268,9 @@ src_configure() {
 		-DUSE_SYSTEM_HIDAPI=ON
 
 		-DDISTRIBUTOR="${BRANDING_OS_NAME}"
+
+		# Use ccache only when user did set FEATURES=ccache (or similar)
+		-DENABLE_CCACHE=OFF
 
 		# Undo cmake.eclass's defaults.
 		# All dolphin's libraries are private
