@@ -7,7 +7,7 @@ EAPI=8
 # * Update DOLPHIN_TAG_COMMIT to match commit used in tag.
 # * Update *_COMMIT for the vendored packages based on their submodules in Externals/.
 
-LLVM_COMPAT=( {18..22} )
+LLVM_COMPAT=( {18..23} )
 LLVM_OPTIONAL=1
 
 inherit branding cmake llvm-r2 pax-utils toolchain-funcs xdg
