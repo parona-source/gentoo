@@ -10,7 +10,7 @@ EAPI=8
 LLVM_COMPAT=( {18..22} )
 LLVM_OPTIONAL=1
 
-inherit branding cmake llvm-r2 pax-utils xdg
+inherit branding cmake llvm-r2 pax-utils toolchain-funcs xdg
 
 if [[ ${PV} == *9999 ]]; then
 	inherit git-r3
@@ -175,8 +175,52 @@ add_bundled_licenses() {
 }
 add_bundled_licenses
 
+tc-check-cxx-min_ver() {
+	do_check() {
+		debug-print "C++ library version check for ${1}"
+		debug-print "Detected: ${2}"
+		debug-print "Required: ${3}"
+		if ver_test ${2} -lt ${3}; then
+			eerror "Your current C++ library is too old for this package!"
+			die "Active C++ library is too old for this package (found ${1} ${2})."
+		fi
+	}
+
+	get_cxx_version() {
+		$(tc-getCXX) -x c++ -E -P ${CXXFLAGS} ${CPPFLAGS} - <<-EOF | sed -n 's/^GENTOO_CXX_VERSION \(.*\)$/\1/p'
+		#if __cplusplus >= 202002L
+		#include <version>
+		#else
+		#include <ciso646>
+		#endif
+		GENTOO_CXX_VERSION ${1}
+		EOF
+	}
+
+	case ${1} in
+		libc++)
+			[[ $(tc-get-cxx-stdlib) == libc++ ]] || return
+			do_check libc++ $(get_cxx_version _LIBCPP_VERSION) ${2}
+			;;
+		libstdc++)
+			[[ $(tc-get-cxx-stdlib) == libstdc++ ]] || return
+			do_check libstdc++ $(get_cxx_version _GLIBCXX_RELEASE) ${2}
+			;;
+		*)
+			eerror "Unkown first parameter for ${FUNCNAME} - must be libc++ or libstdc++"
+			die "${FUNCNAME}: Parameter ${1} unknown"
+			;;
+	esac
+}
+
 pkg_setup() {
 	use llvm && llvm-r2_pkg_setup
+
+	if [[ ${MERGE_TYPE} != binary ]]; then
+		# See libstdc++_min_version and libc++_min_version in CMakeLists.txt
+		tc-check-cxx-min_ver libstdc++ 12
+		tc-check-cxx-min_ver libc++ 150000
+	fi
 }
 
 src_prepare() {
