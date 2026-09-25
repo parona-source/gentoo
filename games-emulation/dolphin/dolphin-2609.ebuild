@@ -175,6 +175,10 @@ add_bundled_licenses() {
 }
 add_bundled_licenses
 
+PATCHES=(
+	"${FILESDIR}"/dolphin-2603-mbgba-definitions.patch
+)
+
 tc-check-cxx-min_ver() {
 	do_check() {
 		debug-print "C++ library version check for ${1}"
