@@ -5,4 +5,7 @@
 	<upstream>
 		<remote-id type="github">radareorg/radare2</remote-id>
 	</upstream>
+	<use>
+		<flag name="libuv">Enable libuv support</flag>
+	</use>
 </pkgmetadata>
