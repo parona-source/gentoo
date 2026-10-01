@@ -3,7 +3,7 @@
 
 EAPI=8
 
-inherit toolchain-funcs
+inherit autotools toolchain-funcs
 
 DESCRIPTION="Simplified Wrapper and Interface Generator"
 HOMEPAGE="http://www.swig.org/ https://github.com/swig/swig"
@@ -26,33 +26,39 @@ DEPEND="
 "
 BDEPEND="virtual/pkgconfig"
 
+SWIG_RUNTIME_VERSION="4"
+PDEPEND="virtual/swig-runtime:0/${SWIG_RUNTIME_VERSION}"
+
 DOCS=( ANNOUNCE CHANGES CHANGES.current README TODO )
 
+PATCHES=(
+	"${FILESDIR}"/${PN}-4.1.1-ccache-configure-clang16.patch
+)
+
+src_prepare() {
+	default
+
+	# Only needed for Clang 16 patch
+	ln -s "${S}"/Tools CCache/ || die
+	AT_M4DIR="Tools/config" eautoreconf
+}
+
 src_configure() {
-	# TODO: add USE for various langs? (https://bugs.gentoo.org/921504#c3)
+	# Sanity check SWIG_RUNTIME_VERSION
+	local detected_swig_runtime_version="$(sed -n -e 's|^#define SWIG_RUNTIME_VERSION "\(.*\)"$|\1|p' Lib/swigrun.swg)"
+	if [[ ${SWIG_RUNTIME_VERSION} != ${detected_swig_runtime_version} ]]; then
+		die "SWIG_RUNTIME_VERSION isn't correct: ${SWIG_RUNTIME_VERSION} != ${detected_swig_runtime_version}"
+	fi
+
 	econf \
 		PKGCONFIG="$(tc-getPKG_CONFIG)" \
-		--without-maximum-compile-warnings \
 		$(use_enable ccache) \
 		$(use_with pcre)
 }
 
-src_compile() {
-	# Override these variables per Makefile.in to get verbose logs
-	emake FLAGS="-k" RUNPIPE=""
-}
-
 src_test() {
 	# The tests won't get run w/o an explicit call, broken Makefiles?
-	# java skipped for bug #921504
-	# *-sections for bug #935318
-	emake check \
-		skip-java=true \
-		FLAGS="-k" \
-		RUNPIPE="" \
-		CFLAGS="${CFLAGS} -std=c++20 -ffunction-sections -fdata-sections" \
-		CXXFLAGS="${CXXFLAGS} -std=c++20 -ffunction-sections -fdata-sections" \
-		LDFLAGS="${LDFLAGS}"
+	emake check
 }
 
 src_install() {

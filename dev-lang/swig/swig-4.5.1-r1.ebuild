@@ -46,6 +46,9 @@ BDEPEND="
 	)
 "
 
+SWIG_RUNTIME_VERSION="5"
+PDEPEND="virtual/swig-runtime:0/${SWIG_RUNTIME_VERSION}"
+
 DOCS=( ANNOUNCE CHANGES CHANGES.current README TODO )
 
 pkg_setup() {
@@ -53,6 +56,12 @@ pkg_setup() {
 }
 
 src_configure() {
+	# Sanity check SWIG_RUNTIME_VERSION
+	local detected_swig_runtime_version="$(sed -n -e 's|^#define SWIG_RUNTIME_VERSION "\(.*\)"$|\1|p' Lib/swigrun.swg)"
+	if [[ ${SWIG_RUNTIME_VERSION} != ${detected_swig_runtime_version} ]]; then
+		die "SWIG_RUNTIME_VERSION isn't correct: ${SWIG_RUNTIME_VERSION} != ${detected_swig_runtime_version}"
+	fi
+
 	# strict aliasing violations in test code
 	filter-lto
 	append-flags -fno-strict-aliasing
