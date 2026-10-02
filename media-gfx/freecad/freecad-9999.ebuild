@@ -66,6 +66,7 @@ RDEPEND="
 	dev-qt/qtbase:6[concurrent,network,xml]
 	media-libs/freetype
 	sci-libs/opencascade:=[json,tbb?]
+	virtual/swig-runtime:=
 	tbb? (
 		dev-cpp/tbb:=
 	)

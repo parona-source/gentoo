@@ -9,11 +9,10 @@ PYTHON_COMPAT=( python3_{12..14} )
 # The added asserts break on mem leaks, so tests fail.
 # PYTHON_REQ_USE="-debug"
 
-inherit check-reqs cmake cuda edo flag-o-matic optfeature python-single-r1 qt-utils toolchain-funcs xdg virtualx branding
+inherit check-reqs cmake cuda edo flag-o-matic optfeature python-single-r1 qt-utils toolchain-funcs xdg virtualx
 
 DESCRIPTION="Qt based Computer Aided Design application"
 HOMEPAGE="https://www.freecad.org/ https://github.com/FreeCAD/FreeCAD"
-ADDON_MANAGER_COMMIT="937b6877239dc78ef59eeefe8099e5f14243eda1"
 
 MY_PN=FreeCAD
 
@@ -23,13 +22,12 @@ if [[ ${PV} == *9999* ]]; then
 	EGIT_SUBMODULES=( 'src/Mod/AddonManager' )
 	S="${WORKDIR}/freecad-${PV}"
 else
-
 	SRC_URI="
 		https://github.com/${MY_PN}/${MY_PN}/archive/refs/tags/${PV}.tar.gz -> ${P}.tar.gz
-		https://github.com/FreeCAD/AddonManager/archive/${ADDON_MANAGER_COMMIT}.tar.gz -> AddonManager.tar.gz
+		https://github.com/FreeCAD/FreeCAD/commit/d91b3e051789623f0bc1eff65947c361e7a661d0.patch -> ${PN}-20710.patch
+		https://github.com/FreeCAD/FreeCAD/commit/9ea0f32692e13eee85b1e74bd42514942d357906.patch -> ${PN}-21433.patch
 	"
-
-	KEYWORDS="~amd64"
+	KEYWORDS="amd64"
 	S="${WORKDIR}/FreeCAD-${PV}"
 fi
 
@@ -42,12 +40,13 @@ IUSE="debug designer +gui netgen pcl +smesh spacenav test X"
 # cMake/FreeCAD_Helpers/InitializeFreeCADBuildOptions.cmake
 # To get their dependencies:
 # 'grep REQUIRES_MODS cMake/FreeCAD_Helpers/CheckInterModuleDependencies.cmake'
-IUSE+=" addonmgr assembly +bim cam fem idf inspection +mesh openscad points reverse robot surface +techdraw"
+IUSE+=" addonmgr assembly +bim cam cloud fem idf inspection +mesh openscad points reverse robot surface +techdraw"
 
 REQUIRED_USE="
 	${PYTHON_REQUIRED_USE}
 	bim? ( mesh )
 	cam? ( mesh )
+	gui? ( bim )
 	designer? ( gui )
 	fem? ( smesh )
 	inspection? ( points )
@@ -56,6 +55,7 @@ REQUIRED_USE="
 	reverse? ( mesh points )
 	test? ( techdraw )
 "
+# Draft Workbench needs BIM
 
 RESTRICT="!test? ( test )"
 
@@ -71,6 +71,7 @@ RDEPEND="
 	dev-qt/qtbase:6[concurrent,network,xml]
 	media-libs/freetype
 	sci-libs/opencascade:=[json]
+	virtual/swig-runtime:=
 	virtual/zlib:=
 	$(python_gen_cond_dep '
 		dev-python/numpy[${PYTHON_USEDEP}]
@@ -79,6 +80,10 @@ RDEPEND="
 		dev-python/pyyaml[${PYTHON_USEDEP}]
 	')
 	assembly? ( sci-libs/ondselsolver )
+	cloud? (
+		dev-libs/openssl:=
+		net-misc/curl
+	)
 	fem? (
 		sci-libs/vtk:=
 		$(python_gen_cond_dep 'dev-python/ply[${PYTHON_USEDEP}]')
@@ -104,7 +109,6 @@ RDEPEND="
 		sci-libs/vtk:=
 	)
 "
-
 DEPEND="${RDEPEND}
 	<dev-cpp/eigen-5:=
 	dev-cpp/ms-gsl
@@ -134,11 +138,12 @@ BDEPEND="
 "
 
 PATCHES=(
-	"${FILESDIR}"/${PN}-1.1.1-tests-src-Qt-only-build-test-for-BUILD_GUI-ON.patch
-	"${FILESDIR}"/${PN}-1.1.1-Gentoo-specific-don-t-check-vcs.patch
-	"${FILESDIR}"/${PN}-1.1.1-fix-sketcher-toolbars.patch
-	"${FILESDIR}"/${PN}-1.1.1-qt-6.11.patch
-	"${FILESDIR}"/${PN}-1.0.2-pybind11-latent-slots-macro-conflicts-with-Qt.patch # fixed in pybind-3.0.1
+	"${FILESDIR}"/${PN}-1.0.0-r1-Gentoo-specific-don-t-check-vcs.patch
+	"${FILESDIR}"/${PN}-1.0.1-tests-src-Qt-only-build-test-for-BUILD_GUI-ON.patch
+	"${FILESDIR}/${PN}-1.0.2-pybind11-latent-slots-macro-conflicts-with-Qt.patch" # fixed in pybind-3.0.1
+	"${DISTDIR}/${PN}-20710.patch" # DESTDIR in env
+	"${DISTDIR}/${PN}-21433.patch" # FindHDF5 fails to find HDF5 after a failing pkg_search_module
+	"${FILESDIR}"/${P}-boost-1.89.patch # bug 969041
 )
 
 DOCS=( CODE_OF_CONDUCT.md README.md )
@@ -255,11 +260,16 @@ pkg_setup() {
 }
 
 src_prepare() {
-	if [[ ${PV} != *9999* ]]; then
-		rmdir "${WORKDIR}/FreeCAD-${PV}/src/Mod/AddonManager" || die
+	# deprecated in python-3.11 removed in python-3.13
+	sed -e '/import imghdr/d' -i src/Mod/CAM/CAMTests/TestCAMSanity.py || die
 
-		mv "${WORKDIR}"/AddonManager-${ADDON_MANAGER_COMMIT} \
-			"${S}"/src/Mod/AddonManager || die
+	# The PCL point_traits.h header was renamed (and deprecated) since 1.11.0 and removed in 1.15.0.
+	# d9e731ca94abc14808ebeed208617116f6d5ea4a
+	sed -e 's#pcl/point_traits.h#pcl/type_traits.h#g' -i src/Mod/ReverseEngineering/App/SurfaceTriangulation.cpp || die
+
+	# removed bundled pycxx
+	if [[ ${PV} != *9999* ]]; then
+		rm -r src/CXX || die "remove bundled pycxx"
 	fi
 
 	cmake_src_prepare
@@ -285,7 +295,7 @@ src_configure() {
 		-DCMAKE_POLICY_DEFAULT_CMP0175="OLD" # add_custom_command
 		-DCMAKE_POLICY_DEFAULT_CMP0153="OLD" # exec_program
 
-		-DPYCXX_INCLUDE_DIRS="${ESYSROOT}/usr/include/${PYTHON_SINGLE_TARGET/_/.}"
+		-DPYCXX_INCLUDE_DIR="${ESYSROOT}/usr/include/${PYTHON_SINGLE_TARGET/_/.}"
 		-DPYCXX_SOURCE_DIR="${ESYSROOT}/usr/share/${PYTHON_SINGLE_TARGET/_/.}/CXX"
 
 		-DBUILD_DESIGNER_PLUGIN=$(usex designer)
@@ -300,6 +310,7 @@ src_configure() {
 		-DBUILD_ASSEMBLY=$(usex assembly)
 		-DBUILD_BIM=$(usex bim)
 		-DBUILD_CAM=$(usex cam)
+		-DBUILD_CLOUD=$(usex cloud)
 		-DBUILD_DRAFT=ON
 		# see below for DRAWING
 		-DBUILD_FEM=$(usex fem)
@@ -375,7 +386,7 @@ src_configure() {
 		mycmakeargs+=(
 			-DENABLE_DEVELOPER_TESTS=OFF
 
-			-DPACKAGE_WCREF="${PVR} (${BRANDING_OS_NAME})"
+			-DPACKAGE_WCREF="${PVR} (gentoo)"
 			-DPACKAGE_WCURL="git://github.com/FreeCAD/FreeCAD.git ${PV}"
 		)
 	fi
@@ -541,8 +552,6 @@ src_install() {
 
 	if [[ -f src/Tools/freecad-thumbnailer ]]; then
 		dobin src/Tools/freecad-thumbnailer
-	else
-		dosym -r "/usr/$(get_libdir)/${PN}/bin/freecad-thumbnailer" "/usr/bin/freecad-thumbnailer"
 	fi
 
 	for dir in share/{applications,icons,metainfo,mime,pixmaps,thumbnailers}; do
