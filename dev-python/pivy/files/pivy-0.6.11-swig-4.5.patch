@@ -1,0 +1,64 @@
+https://github.com/coin3d/pivy/issues/150
+https://github.com/FreeCAD/pivy/pull/8
+
+From 7040f5b8e2a04a23e2bc3eb07844ee5fb87564a7 Mon Sep 17 00:00:00 2001
+From: Chris Hennes <chennes@pioneerlibrarysystem.org>
+Date: Tue, 21 Jul 2026 00:52:50 -0500
+Subject: [PATCH 1/3] Fix missing #ifdef PY_2 guard
+
+--- a/Inventor/SbImage.i
++++ b/Inventor/SbImage.i
+@@ -38,7 +38,12 @@
+     PyErr_SetString(PyExc_TypeError,"null reference"); SWIG_fail;
+   }
+   $3 = PyInt_AsLong(nc);
+-  if (PyString_Check(buf)) {
++#ifdef PY_2
++  if (PyString_Check(buf))
++#else
++  if (PyBytes_Check(buf))
++#endif
++  {
+     Py_ssize_t len = (*$2)[0] * (*$2)[1] * (*$2)[2] * $3;
+ #ifdef PY_2
+     PyString_AsStringAndSize(buf, (char **)&image, &len);
+
+From 92c11bab021395a589819b3e31c36417128d5f77 Mon Sep 17 00:00:00 2001
+From: Chris Hennes <chennes@pioneerlibrarysystem.org>
+Date: Tue, 21 Jul 2026 00:53:33 -0500
+Subject: [PATCH 2/3] Add PyInt_* shim for SWIG<=4.3.0
+
+--- a/install_helpers.py
++++ b/install_helpers.py
+@@ -30,7 +30,7 @@ def swigify_header(header_file, include_file):
+     else:
+         print("[failed]")
+         sys.exit(1)
+-    fd.close
++    fd.close()
+ 
+ 
+ def copy_and_swigify_header(interface_dir, include_dir, fname):
+--- a/interfaces/pivy_common_typemaps.i
++++ b/interfaces/pivy_common_typemaps.i
+@@ -28,6 +28,19 @@ typedef int Py_ssize_t;
+   #define IS_PY3K
+ #endif
+ 
++/* SWIG >= 4.3 dropped the Python 2 PyInt_* aliases; pivy's typemaps still use them. */
++#if PY_VERSION_HEX >= 0x03000000
++  #ifndef PyInt_AsLong
++    #define PyInt_AsLong PyLong_AsLong
++  #endif
++  #ifndef PyInt_FromLong
++    #define PyInt_FromLong PyLong_FromLong
++  #endif
++  #ifndef PyInt_Check
++    #define PyInt_Check PyLong_Check
++  #endif
++#endif
++
+ PyObject *
+ cast_internal(PyObject * self, PyObject * obj, const char * type_name, Py_ssize_t type_len)
+ {
+

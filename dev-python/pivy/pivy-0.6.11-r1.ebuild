@@ -47,6 +47,7 @@ BDEPEND="
 PATCHES=(
 	"${FILESDIR}"/${PN}-0.6.6-0002-Gentoo-specific-clear-swig-deprecation-warning.patch
 	"${FILESDIR}"/${PN}-0.6.7-find-qmake.patch
+	"${FILESDIR}"/${PN}-0.6.11-swig-4.5.patch
 )
 
 DOCS=( AUTHORS HACKING NEWS README.md THANKS )
