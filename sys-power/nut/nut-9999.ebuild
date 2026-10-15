@@ -112,6 +112,7 @@ src_configure() {
 	local myeconfargs=(
 		--datadir=/usr/share/nut
 		--datarootdir=/usr/share/nut
+		--disable-spellcheck # bug #974679
 		--disable-static
 		--disable-strip
 		--disable-Werror
