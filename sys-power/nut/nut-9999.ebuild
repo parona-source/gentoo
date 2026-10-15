@@ -69,7 +69,7 @@ RDEPEND="
 
 PATCHES=(
 )
-PATCH_NEEDS_AUTOGEN=1
+#PATCH_NEEDS_AUTOGEN=1
 
 pkg_pretend() {
 	if use i2c; then
@@ -99,12 +99,6 @@ pkg_setup() {
 }
 
 src_prepare() {
-	if use systemd; then
-		PATCHES+=( "${FILESDIR}/systemd_notify_285.patch" )
-	else
-		PATCHES+=( "${FILESDIR}/systemd_notify_285_openrc.patch" )
-	fi
-
 	default
 
 	if [[ ${PV} == *9999 ]] || [[ ${PATCH_NEEDS_AUTOGEN} == 1 ]] ; then
