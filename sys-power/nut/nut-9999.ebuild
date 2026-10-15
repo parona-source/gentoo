@@ -39,8 +39,8 @@ DEPEND="
 	acct-user/nut
 	dev-libs/libltdl
 	virtual/udev
-	cgi? ( >=media-libs/gd-2[png] )
-	gpio? ( dev-libs/libgpiod )
+	cgi? ( >=media-libs/gd-2:2=[png] )
+	gpio? ( dev-libs/libgpiod:= )
 	i2c? ( sys-apps/i2c-tools )
 	ipmi? ( sys-libs/freeipmi )
 	modbus? ( dev-libs/libmodbus )
