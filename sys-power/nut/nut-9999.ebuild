@@ -123,7 +123,8 @@ src_configure() {
 		--with-htmlpath=/usr/share/nut/html
 		--with-logfacility=LOG_DAEMON
 		--with-statepath=/run/nut
-		--with-systemdsystemunitdir="$(systemd_get_systemunitdir)"
+		# systemdsystemunitdir implies "basic" systemd support, bug #977380
+		--with-systemdsystemunitdir="$(usex systemd $(systemd_get_systemunitdir) no)"
 		--with-systemdtmpfilesdir="/usr/lib/tmpfiles.d"
 		--with-udev-dir="$(get_udevdir)"
 		--with-user=nut
@@ -250,7 +251,7 @@ pkg_postinst() {
 
 	udev_reload
 
-	tmpfiles_process nut-common-tmpfiles.conf
+	use systemd && tmpfiles_process nut-common-tmpfiles.conf
 	xdg_pkg_postinst
 }
 
