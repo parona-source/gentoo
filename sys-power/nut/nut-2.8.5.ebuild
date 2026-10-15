@@ -16,7 +16,11 @@ if [[ ${PV} == *9999 ]] ; then
 	EGIT_REPO_URI="https://github.com/networkupstools/${PN}.git"
 	inherit git-r3
 else
-	SRC_URI="https://networkupstools.org/source/${PV%.*}/${MY_P}.tar.gz"
+	inherit verify-sig
+	SRC_URI="
+		https://networkupstools.org/source/${PV%.*}/${MY_P}.tar.gz
+		verify-sig? ( https://networkupstools.org/source/${PV%.*}/${MY_P}.tar.gz.sig )
+	"
 	KEYWORDS="~amd64 ~arm ~arm64 ~ppc ~ppc64 ~riscv ~x86"
 fi
 
@@ -66,6 +70,11 @@ RDEPEND="
 	)
 	selinux? ( sec-policy/selinux-nut )
 "
+
+if [[ ${PV} != *9999 ]]; then
+	BDEPEND+=" sec-keys/openpgp-keys-nut"
+	VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/nut.asc
+fi
 
 PATCHES=(
 )
