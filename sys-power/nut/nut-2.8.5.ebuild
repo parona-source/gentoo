@@ -28,7 +28,7 @@ S="${WORKDIR}/${MY_P}"
 
 LICENSE="GPL-2"
 SLOT="0"
-IUSE="gpio cgi doc ipmi serial i2c +man snmp +usb modbus selinux ssl tcpd test xml zeroconf python monitor systemd"
+IUSE="cgi doc gpio i2c ipmi +man modbus monitor python selinux serial snmp ssl systemd test tcpd upower +usb xml zeroconf"
 RESTRICT="!test? ( test )"
 
 REQUIRED_USE="
@@ -53,6 +53,10 @@ DEPEND="
 	ssl? ( >=dev-libs/openssl-1:= )
 	systemd? ( >=sys-apps/systemd-253 )
 	tcpd? ( sys-apps/tcp-wrappers )
+	upower? (
+		dev-libs/glib:2
+		sys-power/upower
+	)
 	usb? ( virtual/libusb:1 )
 	xml? ( >=net-libs/neon-0.25.0:= )
 	zeroconf? ( net-dns/avahi )
@@ -159,6 +163,7 @@ src_configure() {
 		$(use_with systemd libsystemd)
 		$(use_with tcpd wrap)
 		$(use_with usb)
+		$(use_with upower)
 		$(use_with xml neon)
 		$(use_with zeroconf avahi)
 	)
