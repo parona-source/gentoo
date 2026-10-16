@@ -129,7 +129,6 @@ src_configure() {
 		--with-udev-dir="$(get_udevdir)"
 		--with-user=nut
 		--without-powerman
-		--without-python
 		--without-python2
 		--with-altpidpath=/run/nut
 		--with-pidpath=/run/nut
