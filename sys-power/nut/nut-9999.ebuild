@@ -208,10 +208,10 @@ src_install() {
 	fi
 
 	if use monitor; then
-		make_wrapper NUT-Monitor-py3qt5 /usr/share/nut/nut-monitor/app/NUT-Monitor-py3qt5 /usr/share/nut/nut-monitor/app
+		make_wrapper NUT-Monitor-py3qt6 /usr/share/nut/nut-monitor/app/NUT-Monitor-py3qt6 /usr/share/nut/nut-monitor/app
 
 		# Install desktop shortcut
-		newmenu scripts/python/app/nut-monitor-py3qt5.desktop nut-monitor.desktop
+		newmenu scripts/python/app/nut-monitor-py3qt6.desktop nut-monitor.desktop
 
 		# Installing Application icons
 		local res
