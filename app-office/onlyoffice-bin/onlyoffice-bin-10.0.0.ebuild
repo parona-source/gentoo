@@ -75,8 +75,12 @@ src_prepare() {
 	sed -i -e "/^export LD_LIBRARY_PATH=/ s|$|:${EPREFIX}/usr/$(get_libdir)/apulse|" \
 		"${S}"/usr/bin/onlyoffice-desktopeditors || die
 
-	# Drop lib with unresolved soname dependencies, bug #970999
+	# Drop libs with unresolved soname dependencies, bug #970999
 	rm -v opt/onlyoffice/desktopeditors/platforminputcontexts/libqtvirtualkeyboardplugin.so || die
+	if use arm64; then
+		rm -v opt/onlyoffice/desktopeditors/platforms/libqeglfs.so \
+			opt/onlyoffice/desktopeditors/platforms/libqwayland-*.so || die
+	fi
 }
 
 src_install() {
