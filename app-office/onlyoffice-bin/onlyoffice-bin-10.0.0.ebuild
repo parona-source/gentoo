@@ -46,11 +46,14 @@ RDEPEND="
 	sys-libs/glibc
 	x11-libs/cairo
 	x11-libs/gtk+:3[X]
+	x11-libs/libICE
+	x11-libs/libSM
 	x11-libs/libX11
 	x11-libs/libXcomposite
 	x11-libs/libXdamage
 	x11-libs/libXext
 	x11-libs/libXfixes
+	x11-libs/libXi
 	x11-libs/libXrandr
 	x11-libs/libdrm
 	x11-libs/libnotify
