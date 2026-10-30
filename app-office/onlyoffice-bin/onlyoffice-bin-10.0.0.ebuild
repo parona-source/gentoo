@@ -14,12 +14,16 @@ SRC_URI="
 		https://github.com/ONLYOFFICE/DesktopEditors/releases/download/v"${PV}"/onlyoffice-desktopeditors_amd64.deb
 		-> "${P}"_amd64.deb
 	)
+	arm64? (
+		https://github.com/ONLYOFFICE/DesktopEditors/releases/download/v"${PV}"/onlyoffice-desktopeditors_arm64.deb
+		-> "${P}"_arm64.deb
+	)
 "
 S="${WORKDIR}"
 
 LICENSE="AGPL-3"
 SLOT="0"
-KEYWORDS="~amd64"
+KEYWORDS="-* ~amd64 ~arm64"
 RESTRICT="mirror strip test"
 
 RDEPEND="
