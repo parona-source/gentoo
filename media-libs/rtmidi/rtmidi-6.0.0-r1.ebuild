@@ -21,6 +21,13 @@ DEPEND="
 "
 RDEPEND="${DEPEND}"
 
+src_prepare() {
+	cmake_src_prepare
+
+	# Fix 'lib' path
+	sed -e "s/lib/$(get_libdir)/g" -i rtmidi.pc.in || die
+}
+
 src_configure() {
 	local mycmakeargs=(
 		-DRTMIDI_API_ALSA=$(usex alsa)
