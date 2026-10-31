@@ -23,7 +23,7 @@ DEPEND="
 	media-libs/libsdl2
 	media-libs/libsndfile
 	media-libs/openal
-	media-libs/rtmidi
+	media-libs/rtmidi:=
 	net-libs/libslirp
 	virtual/zlib:=
 	fluidsynth? ( media-sound/fluidsynth:= )
