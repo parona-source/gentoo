@@ -29,7 +29,7 @@ IUSE="+alsa jack"
 # I/O devices present.
 RESTRICT="test"
 
-DEPEND="media-libs/rtmidi[alsa?,jack?]"
+DEPEND="media-libs/rtmidi:=[alsa?,jack?]"
 RDEPEND="${DEPEND}"
 BDEPEND="dev-python/cython[${PYTHON_USEDEP}]
 	virtual/pkgconfig"
