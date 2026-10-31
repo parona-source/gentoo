@@ -40,8 +40,9 @@ src_prepare() {
 	default
 
 	# Replace which with 'command -v'
+	# Remove '-Werror'
 	sed -e 's/which/command -v/g' -i Makefile || die
-	sed -e 's/which/command -v/g' -i Shared.makefile || die
+	sed -e 's/which/command -v/g' -e 's/-Werror//g' -i Shared.makefile || die
 
 	lua_copy_sources
 }
