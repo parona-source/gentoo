@@ -21,7 +21,8 @@ KEYWORDS="~amd64 ~arm ~arm64 ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
 IUSE="branding"
 
 # gtk+:3 is needed for build for the gtk-encode-symbolic-svg utility
-# librsvg at runtime for rendering scalable icons shipped by the theme
+# librsvg > 2.40 at runtime for rendering scalable icons shipped by the theme:
+# https://viruta.org/do-not-use-librsvg-2.40.x.html
 # adwaita-icon-theme-legacy needed to be FDO compatible:
 # https://bugs.gentoo.org/927897
 # https://gitlab.gnome.org/GNOME/adwaita-icon-theme/-/issues/288
