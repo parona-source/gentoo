@@ -13,7 +13,8 @@ SLOT="0"
 KEYWORDS="amd64 arm arm64 ~loong ~mips ppc ppc64 ~riscv ~s390 ~sparc x86"
 
 # gtk+:3 is needed for build for the gtk-encode-symbolic-svg utility
-# librsvg is needed at runtime for rendering scalable icons shipped by the theme
+# librsvg > 2.40 is needed at runtime for rendering scalable icons shipped by
+# the theme: https://viruta.org/do-not-use-librsvg-2.40.x.html
 DEPEND=">=x11-themes/hicolor-icon-theme-0.10"
 RDEPEND="${DEPEND}
 	>=gnome-base/librsvg-2.48:2
