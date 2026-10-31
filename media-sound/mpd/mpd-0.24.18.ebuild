@@ -6,10 +6,12 @@ EAPI=8
 PYTHON_COMPAT=( python3_{13..15} )
 inherit eapi9-ver flag-o-matic linux-info meson python-any-r1 systemd verify-sig xdg
 
+PV_MAN="0.24.18"
 DESCRIPTION="The Music Player Daemon (mpd)"
 HOMEPAGE="https://www.musicpd.org https://github.com/MusicPlayerDaemon/MPD"
 SRC_URI="
 	https://www.musicpd.org/download/${PN}/$(ver_cut 1-2)/${P}.tar.xz
+	!doc? ( https://raw.githubusercontent.com/PPN-SD/gentoo-manpages/refs/tags/${P}/${PN}-${PV_MAN}-manpages.tar.xz )
 	verify-sig? ( https://www.musicpd.org/download/${PN}/$(ver_cut 1-2)/${P}.tar.xz.sig )
 "
 
@@ -182,6 +184,13 @@ pkg_setup() {
 	fi
 }
 
+src_unpack() {
+	if use verify-sig; then
+		verify-sig_verify_detached "${DISTDIR}"/${P}.tar.xz{,.sig}
+	fi
+	default
+}
+
 src_configure() {
 	local emesonargs=(
 		# media-libs/adplug is not packaged anymore
@@ -304,8 +313,7 @@ src_install() {
 	if use doc; then
 		local HTML_DOCS=( "${BUILD_DIR}"/doc/html/. )
 	else
-		newman "${FILESDIR}"/${PN}.1-0.24.2 ${PN}.1
-		newman "${FILESDIR}"/${PN}.conf.5-0.24.9 ${PN}.conf.5
+		doman "${WORKDIR}"/man/*
 	fi
 
 	meson_src_install
