@@ -44,7 +44,7 @@ RDEPEND="
 	media-libs/sdl2-mixer[midi?]
 	virtual/zlib:=
 	midi? (
-		media-libs/rtmidi
+		media-libs/rtmidi:=
 	)
 	videos? ( >=media-video/ffmpeg-2.2.3:0= )
 "

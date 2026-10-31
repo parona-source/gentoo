@@ -43,7 +43,7 @@ RDEPEND="
 	>=media-libs/freetype-2.5.3:2
 	media-libs/sdl2-mixer[midi?]
 	virtual/zlib:=
-	midi? ( media-libs/rtmidi )
+	midi? ( media-libs/rtmidi:= )
 	videos? ( >=media-video/ffmpeg-2.2.3:0= )
 "
 DEPEND="${RDEPEND}"
