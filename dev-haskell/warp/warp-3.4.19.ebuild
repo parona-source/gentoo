@@ -23,17 +23,18 @@ RDEPEND=">=dev-haskell/async-2:=[profile?]
 	>=dev-haskell/case-insensitive-0.2:=[profile?]
 	dev-haskell/hashable:=[profile?]
 	dev-haskell/http-date:=[profile?]
-	>=dev-haskell/http-types-0.12:=[profile?]
+	>=dev-haskell/http-semantics-0.4:=[profile?] <dev-haskell/http-semantics-0.5:=[profile?]
+	>=dev-haskell/http-types-0.12:=[profile?] <dev-haskell/http-types-1:=[profile?]
 	>=dev-haskell/http2-5.4:=[profile?] <dev-haskell/http2-5.5:=[profile?]
 	>=dev-haskell/iproute-1.3.1:=[profile?]
-	>=dev-haskell/network-2.3:=[profile?]
-	>=dev-haskell/recv-0.1.0:=[profile?] <dev-haskell/recv-0.2.0:=[profile?]
+	>=dev-haskell/network-3.2.10:=[profile?]
+	>=dev-haskell/recv-0.1.3:=[profile?] <dev-haskell/recv-0.2.0:=[profile?]
 	>=dev-haskell/simple-sendfile-0.2.7:=[profile?] <dev-haskell/simple-sendfile-0.3:=[profile?]
 	>=dev-haskell/streaming-commons-0.1.10:=[profile?]
 	dev-haskell/text:=[profile?]
-	>=dev-haskell/time-manager-0.2:=[profile?] <dev-haskell/time-manager-0.4:=[profile?]
+	>=dev-haskell/time-manager-0.5:=[profile?] <dev-haskell/time-manager-0.6:=[profile?]
 	>=dev-haskell/vault-0.3:=[profile?]
-	>=dev-haskell/wai-3.2.4:=[profile?] <dev-haskell/wai-3.3:=[profile?]
+	>=dev-haskell/wai-3.2.5:=[profile?] <dev-haskell/wai-3.3:=[profile?]
 	dev-haskell/word8:=[profile?]
 	>=dev-lang/ghc-9.0.2:=
 	x509? ( dev-haskell/crypton-x509:=[profile?] )
@@ -48,7 +49,7 @@ DEPEND="${RDEPEND}
 src_configure() {
 	haskell-cabal_src_configure \
 		--flag=allow-sendfilefd \
-		--flag=include-warp-version \
+		--flag=-include-warp-version \
 		--flag=-network-bytestring \
 		$(cabal_flag debug warp-debug) \
 		$(cabal_flag x509 x509)
