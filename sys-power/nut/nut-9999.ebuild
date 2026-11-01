@@ -117,7 +117,7 @@ src_prepare() {
 	# po files not installed so symlinks would be orphans.
 	# Even so symlinks would be only useful for gtk2 and qt5 as per upstream.
 	sed -e '/^install-data-hook-app-locale-symlinks:/,/^$/ { /UTF8_POFILE/d }' \
-		-i scripts/python/Makefile.am || die
+		-i scripts/python/Makefile.* || die
 
 	if [[ ${PV} == *9999 ]] || [[ ${PATCH_NEEDS_AUTOGEN} == 1 ]] ; then
 		./autogen.sh || die
