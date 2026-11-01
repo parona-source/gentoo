@@ -21,6 +21,11 @@ RESTRICT="test" # Test-suite depends on deprecated system-fileio and system-file
 
 PATCHES=(
 	"${FILESDIR}/${PN}-2.18.4-remove-ghc-9_8-conditional.patch"
+	"${FILESDIR}/${PN}-2.18.5-ghc-9.14.patch"
+)
+
+CABAL_CHDEPS=(
+	'zip-archive       >= 0.3 && < 0.5' 'zip-archive       >= 0.3 && < 0.6'
 )
 
 RDEPEND=">=dev-haskell/async-2.0.2:=[profile?] <dev-haskell/async-2.3:=[profile?]
@@ -55,12 +60,12 @@ RDEPEND=">=dev-haskell/async-2.0.2:=[profile?] <dev-haskell/async-2.3:=[profile?
 	>=dev-haskell/unix-compat-0.6:=[profile?] <dev-haskell/unix-compat-0.8:=[profile?]
 	>=dev-haskell/utf8-string-1:=[profile?] <dev-haskell/utf8-string-1.1:=[profile?]
 	>=dev-haskell/vector-0.11:=[profile?] <dev-haskell/vector-0.14:=[profile?]
-	>=dev-haskell/zip-archive-0.3:=[profile?] <dev-haskell/zip-archive-0.5:=[profile?]
+	>=dev-haskell/zip-archive-0.3:=[profile?] <dev-haskell/zip-archive-0.6:=[profile?]
 	>=dev-haskell/zlib-0.6.1.2:=[profile?] <dev-haskell/zlib-0.8:=[profile?]
 	>=dev-lang/ghc-9.0.2:=
 "
 DEPEND="${RDEPEND}
-	>=dev-haskell/cabal-3.4.1.0 <dev-haskell/cabal-3.11
+	>=dev-haskell/cabal-3.4.1.0 <dev-haskell/cabal-3.17
 "
 #test? ( >=dev-haskell/cmdargs-0.10.10 <dev-haskell/cmdargs-0.11
 # 		>=dev-haskell/findbin-0.0.5 <dev-haskell/findbin-0.1
