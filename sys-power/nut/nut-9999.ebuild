@@ -144,6 +144,8 @@ src_configure() {
 		# systemdsystemunitdir implies "basic" systemd support, bug #977380
 		--with-systemdsystemunitdir="$(usex systemd $(systemd_get_systemunitdir) no)"
 		--with-systemdtmpfilesdir="/usr/lib/tmpfiles.d"
+		# Shortcut systemd feature tests to avoid sandbox violations, bug #985347
+		ac_cv_path_SYSTEMD_ANALYZE_PROGRAM="${BROOT}/bin/$(usex systemd true false)"
 		--with-udev-dir="$(get_udevdir)"
 		--with-user=nut
 		--without-powerman
