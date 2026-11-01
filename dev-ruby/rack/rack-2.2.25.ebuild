@@ -21,7 +21,11 @@ SLOT="$(ver_cut 1-2)"
 KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
 IUSE="test"
 
-ruby_add_rdepend "virtual/ruby-ssl"
+ruby_add_rdepend "
+	dev-ruby/logger
+	dev-ruby/ostruct
+	virtual/ruby-ssl
+"
 
 ruby_add_bdepend "test? (
 	dev-ruby/minitest:5
