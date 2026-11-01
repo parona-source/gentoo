@@ -1,4 +1,4 @@
-# Copyright 1999-2025 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -64,6 +64,7 @@ PATCHES=(
 	"${FILESDIR}"/${P}-mxml4.patch
 	"${FILESDIR}"/${P}-flags.patch
 	"${FILESDIR}"/${P}-no-register.patch
+	"${FILESDIR}"/${P}-odr.patch
 )
 
 src_unpack() {
