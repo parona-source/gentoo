@@ -15,11 +15,15 @@ LICENSE="MIT"
 SLOT="0/${PV}"
 KEYWORDS="~amd64 ~arm64 ~ppc64 ~riscv ~x86"
 
+CABAL_CHDEPS=(
+	'QuickCheck        >= 2.9    && < 2.18' 'QuickCheck        >= 2.9    && < 2.20'
+)
+
 RDEPEND=">=dev-haskell/file-embed-0.0:=[profile?] <dev-haskell/file-embed-0.1:=[profile?]
 	>=dev-haskell/hslua-core-2.3:=[profile?] <dev-haskell/hslua-core-2.4:=[profile?]
 	>=dev-haskell/hslua-marshalling-2.0:=[profile?] <dev-haskell/hslua-marshalling-2.4:=[profile?]
 	>=dev-haskell/lua-arbitrary-1.0:=[profile?] <dev-haskell/lua-arbitrary-1.1:=[profile?]
-	>=dev-haskell/quickcheck-2.9:=[profile?] <dev-haskell/quickcheck-2.18:=[profile?]
+	>=dev-haskell/quickcheck-2.9:=[profile?] <dev-haskell/quickcheck-2.20:=[profile?]
 	>=dev-haskell/tasty-1.2:=[profile?] <dev-haskell/tasty-1.6:=[profile?]
 	>=dev-lang/ghc-9.0.2:=
 "
