@@ -4,7 +4,7 @@
 EAPI=8
 
 DESCRIPTION="Printer information files for foomatic-db-engine to generate ppds"
-HOMEPAGE="http://www.linuxprinting.org/foomatic.html"
+HOMEPAGE="https://openprinting.github.io/"
 # Upstream removes the tarball every day: store a copy in our devspace for
 # people not relying on our mirrors
 SRC_URI="http://www.openprinting.org/download/foomatic/${PN}-$(ver_rs 2 -).tar.xz
