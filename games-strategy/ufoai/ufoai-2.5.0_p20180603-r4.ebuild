@@ -25,7 +25,7 @@ S="${WORKDIR}/${PN}-code-${COMMIT}"
 # https://ufoai.org/licenses/
 LICENSE="GPL-2 GPL-3 public-domain CC-BY-3.0 CC-BY-SA-3.0 MIT"
 SLOT="0"
-KEYWORDS="~amd64 ~x86"
+KEYWORDS="~amd64 ~arm64 ~x86"
 IUSE="+client cpu_flags_x86_sse debug server"
 REQUIRED_USE="|| ( client server )"
 
